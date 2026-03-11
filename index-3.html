@@ -1,0 +1,1544 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CMD // DASH</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Mono:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+/* ── THEME VARIABLES ── */
+[data-theme="dark"] {
+  --bg: #080810;
+  --surface: #0f0f1a;
+  --surface2: #171726;
+  --surface3: #1e1e30;
+  --border: #ffffff0d;
+  --border2: #ffffff18;
+  --text: #eeeef8;
+  --text-muted: #6b6b88;
+  --text-dim: #32324a;
+  --shadow: #00000060;
+  --accent-blue: #3d8eff;
+  --accent-green: #00e676;
+  --accent-red: #ff3d71;
+  --accent-amber: #ffb300;
+  --accent-purple: #c77dff;
+  --topbar-bg: #080810cc;
+}
+[data-theme="light"] {
+  --bg: #f0f0f8;
+  --surface: #ffffff;
+  --surface2: #f5f5fc;
+  --surface3: #eaeaf4;
+  --border: #00000010;
+  --border2: #00000020;
+  --text: #12121e;
+  --text-muted: #6b6b88;
+  --text-dim: #b0b0c8;
+  --shadow: #00000018;
+  --accent-blue: #2563eb;
+  --accent-green: #00b050;
+  --accent-red: #e11d48;
+  --accent-amber: #d97706;
+  --accent-purple: #7c3aed;
+  --topbar-bg: #f0f0f8cc;
+}
+
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+html { scroll-behavior: smooth; }
+
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: 'Syne', sans-serif;
+  min-height: 100vh;
+  transition: background 0.3s, color 0.3s;
+}
+
+/* AMBIENT */
+.ambient {
+  position: fixed; inset: 0; pointer-events: none; z-index: 0; overflow: hidden;
+}
+.ambient-blob {
+  position: absolute;
+  border-radius: 50%;
+  filter: blur(80px);
+  opacity: 0.06;
+  animation: blobFloat 12s ease-in-out infinite;
+}
+[data-theme="light"] .ambient-blob { opacity: 0.04; }
+.blob1 { width: 600px; height: 600px; background: var(--accent-blue); top: -200px; left: -100px; animation-delay: 0s; }
+.blob2 { width: 400px; height: 400px; background: var(--accent-green); bottom: -100px; right: -100px; animation-delay: -6s; }
+.blob3 { width: 300px; height: 300px; background: var(--accent-purple); top: 40%; left: 40%; animation-delay: -3s; }
+@keyframes blobFloat {
+  0%, 100% { transform: translate(0, 0) scale(1); }
+  33% { transform: translate(30px, -20px) scale(1.05); }
+  66% { transform: translate(-20px, 15px) scale(0.95); }
+}
+
+/* TOPBAR */
+.topbar {
+  position: fixed; top: 0; left: 0; right: 0; height: 56px;
+  background: var(--topbar-bg);
+  backdrop-filter: blur(24px);
+  border-bottom: 1px solid var(--border);
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 0 20px; z-index: 200;
+  transition: background 0.3s;
+}
+.topbar-brand {
+  font-size: 13px; font-weight: 800; letter-spacing: 0.22em; text-transform: uppercase;
+}
+.topbar-brand span { color: var(--accent-blue); }
+.topbar-right { display: flex; align-items: center; gap: 12px; }
+
+.icon-btn {
+  width: 36px; height: 36px; border-radius: 9px;
+  background: var(--surface2); border: 1px solid var(--border);
+  display: flex; align-items: center; justify-content: center;
+  cursor: pointer; font-size: 16px; transition: all 0.15s;
+  position: relative;
+}
+.icon-btn:hover { background: var(--surface3); border-color: var(--border2); transform: translateY(-1px); }
+
+.notif-badge {
+  position: absolute; top: -4px; right: -4px;
+  width: 16px; height: 16px; border-radius: 50%;
+  background: var(--accent-red); color: white;
+  font-size: 9px; font-weight: 700; font-family: 'DM Mono', monospace;
+  display: flex; align-items: center; justify-content: center;
+  border: 2px solid var(--bg);
+}
+
+.time-display {
+  font-family: 'DM Mono', monospace; font-size: 12px;
+  color: var(--text-muted); letter-spacing: 0.08em;
+  display: none;
+}
+@media (min-width: 640px) { .time-display { display: block; } }
+
+.status-pill {
+  display: flex; align-items: center; gap: 6px;
+  background: var(--surface2); border: 1px solid var(--border);
+  border-radius: 20px; padding: 4px 10px;
+  font-family: 'DM Mono', monospace; font-size: 10px; color: var(--text-muted);
+}
+.status-dot { width: 7px; height: 7px; border-radius: 50%; background: var(--accent-green); box-shadow: 0 0 6px var(--accent-green); animation: pulse 2s infinite; }
+@keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.3} }
+
+/* HAMBURGER */
+.hamburger {
+  display: none; flex-direction: column; gap: 4px;
+  width: 36px; height: 36px; align-items: center; justify-content: center;
+  cursor: pointer; border-radius: 9px;
+  background: var(--surface2); border: 1px solid var(--border);
+}
+.hamburger span { width: 16px; height: 2px; background: var(--text); border-radius: 2px; transition: all 0.3s; }
+.hamburger.open span:nth-child(1) { transform: translateY(6px) rotate(45deg); }
+.hamburger.open span:nth-child(2) { opacity: 0; }
+.hamburger.open span:nth-child(3) { transform: translateY(-6px) rotate(-45deg); }
+@media (max-width: 768px) { .hamburger { display: flex; } }
+
+/* LAYOUT */
+.layout {
+  display: grid;
+  grid-template-columns: 240px 1fr;
+  min-height: 100vh;
+  padding-top: 56px;
+  position: relative; z-index: 1;
+}
+@media (max-width: 768px) {
+  .layout { grid-template-columns: 1fr; }
+}
+
+/* SIDEBAR */
+.sidebar {
+  border-right: 1px solid var(--border);
+  padding: 20px 0;
+  position: sticky; top: 56px;
+  height: calc(100vh - 56px);
+  overflow-y: auto;
+  background: var(--surface);
+  transition: transform 0.3s, background 0.3s;
+  z-index: 150;
+}
+@media (max-width: 768px) {
+  .sidebar {
+    position: fixed; top: 56px; left: 0; bottom: 0; width: 260px;
+    transform: translateX(-100%);
+    box-shadow: 4px 0 24px var(--shadow);
+  }
+  .sidebar.open { transform: translateX(0); }
+}
+
+.sidebar-section { padding: 0 12px; margin-bottom: 24px; }
+.sidebar-label {
+  font-family: 'DM Mono', monospace; font-size: 9px;
+  letter-spacing: 0.2em; text-transform: uppercase;
+  color: var(--text-dim); padding: 0 10px; margin-bottom: 6px;
+}
+.nav-item {
+  display: flex; align-items: center; gap: 10px;
+  padding: 9px 10px; border-radius: 8px; cursor: pointer;
+  transition: all 0.15s; font-size: 13px; font-weight: 600;
+  color: var(--text-muted); position: relative; user-select: none;
+}
+.nav-item:hover { background: var(--surface2); color: var(--text); }
+.nav-item.active { background: var(--surface2); color: var(--text); }
+.nav-item.active::before {
+  content: ''; position: absolute; left: 0; top: 20%; bottom: 20%;
+  width: 3px; border-radius: 0 2px 2px 0; background: var(--accent-blue);
+}
+.nav-icon {
+  width: 30px; height: 30px; border-radius: 8px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 15px; flex-shrink: 0;
+}
+.nav-badge {
+  margin-left: auto; color: white;
+  font-size: 9px; font-weight: 700; font-family: 'DM Mono', monospace;
+  padding: 2px 6px; border-radius: 10px; min-width: 18px; text-align: center;
+}
+.nb-red { background: var(--accent-red); }
+.nb-green { background: var(--accent-green); color: #000; }
+.nb-amber { background: var(--accent-amber); color: #000; }
+
+/* OVERLAY */
+.sidebar-overlay {
+  display: none; position: fixed; inset: 0;
+  background: #00000060; z-index: 140; backdrop-filter: blur(2px);
+}
+@media (max-width: 768px) { .sidebar-overlay { display: block; opacity: 0; pointer-events: none; transition: opacity 0.3s; } }
+.sidebar-overlay.active { opacity: 1; pointer-events: all; }
+
+/* MAIN */
+.main { padding: 24px 20px; overflow-y: auto; min-width: 0; }
+@media (min-width: 640px) { .main { padding: 28px 28px; } }
+
+/* PANELS */
+.panel { display: none; }
+.panel.active { display: block; }
+.panel-enter { animation: panelIn 0.25s ease; }
+@keyframes panelIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
+/* PANEL HEADER */
+.panel-header {
+  display: flex; align-items: flex-start; justify-content: space-between;
+  margin-bottom: 24px; gap: 12px; flex-wrap: wrap;
+}
+.panel-title { font-size: 24px; font-weight: 800; letter-spacing: -0.02em; }
+@media (min-width: 640px) { .panel-title { font-size: 28px; } }
+.panel-subtitle { font-size: 12px; color: var(--text-muted); margin-top: 3px; font-weight: 400; }
+
+/* BUTTONS */
+.btn {
+  display: inline-flex; align-items: center; gap: 6px;
+  border: none; border-radius: 9px; padding: 9px 16px;
+  font-family: 'Syne', sans-serif; font-size: 12px; font-weight: 700;
+  cursor: pointer; transition: all 0.15s; white-space: nowrap;
+}
+.btn:hover { transform: translateY(-1px); opacity: 0.9; }
+.btn-blue { background: var(--accent-blue); color: white; }
+.btn-green { background: var(--accent-green); color: #000; }
+.btn-ghost { background: var(--surface2); color: var(--text); border: 1px solid var(--border); }
+
+/* SEARCH */
+.search-wrap {
+  display: flex; align-items: center; gap: 8px;
+  background: var(--surface2); border: 1px solid var(--border);
+  border-radius: 10px; padding: 8px 12px; margin-bottom: 20px;
+  max-width: 300px; transition: border-color 0.15s;
+}
+.search-wrap:focus-within { border-color: var(--accent-blue); }
+.search-wrap input {
+  background: none; border: none; outline: none;
+  color: var(--text); font-family: 'DM Mono', monospace; font-size: 12px; width: 100%;
+}
+.search-wrap input::placeholder { color: var(--text-dim); }
+
+/* STATS GRID */
+.stats-row {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 12px; margin-bottom: 24px;
+}
+@media (min-width: 640px) { .stats-row { grid-template-columns: repeat(4, 1fr); gap: 16px; } }
+
+.stat-card {
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: 12px; padding: 16px; position: relative; overflow: hidden;
+  transition: all 0.2s; cursor: default;
+  animation: statIn 0.4s ease both;
+}
+.stat-card:nth-child(1){animation-delay:0.05s}
+.stat-card:nth-child(2){animation-delay:0.1s}
+.stat-card:nth-child(3){animation-delay:0.15s}
+.stat-card:nth-child(4){animation-delay:0.2s}
+@keyframes statIn { from{opacity:0;transform:translateY(12px)} to{opacity:1;transform:translateY(0)} }
+.stat-card:hover { transform: translateY(-2px); border-color: var(--border2); box-shadow: 0 8px 24px var(--shadow); }
+.stat-card::after { content:''; position:absolute; top:0;left:0;right:0;height:2px; }
+.sc-blue::after{background:var(--accent-blue)} .sc-green::after{background:var(--accent-green)}
+.sc-red::after{background:var(--accent-red)} .sc-amber::after{background:var(--accent-amber)}
+.sc-purple::after{background:var(--accent-purple)}
+.stat-label { font-family:'DM Mono',monospace; font-size:9px; letter-spacing:0.15em; text-transform:uppercase; color:var(--text-muted); margin-bottom:8px; }
+.stat-value { font-size:28px; font-weight:800; letter-spacing:-0.03em; line-height:1; }
+.stat-sub { font-size:10px; color:var(--text-muted); margin-top:4px; }
+
+/* SECTION TITLE */
+.section-title {
+  font-family:'DM Mono',monospace; font-size:9px; letter-spacing:0.2em;
+  text-transform:uppercase; color:var(--text-dim); margin:20px 0 10px;
+  display:flex; align-items:center; gap:10px;
+}
+.section-title::after { content:''; flex:1; height:1px; background:var(--border); }
+
+/* MSG LIST */
+.msg-list { display:flex; flex-direction:column; gap:2px; }
+.msg-item {
+  display:grid; grid-template-columns:42px 1fr auto;
+  align-items:center; gap:12px; padding:12px 14px;
+  border-radius:10px; cursor:pointer; transition:all 0.15s;
+  border:1px solid transparent;
+}
+.msg-item:hover { background:var(--surface2); border-color:var(--border); }
+.msg-item.unread { background: color-mix(in srgb, var(--accent-blue) 5%, transparent); }
+.avatar {
+  width:42px;height:42px;border-radius:11px;
+  display:flex;align-items:center;justify-content:center;
+  font-size:13px;font-weight:700;flex-shrink:0;
+}
+.msg-name { font-size:13px; font-weight:700; margin-bottom:2px; }
+.msg-preview { font-size:11px; color:var(--text-muted); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; font-weight:400; }
+.msg-time { font-family:'DM Mono',monospace; font-size:10px; color:var(--text-muted); white-space:nowrap; }
+.unread-dot { width:7px;height:7px;border-radius:50%;background:var(--accent-blue);margin:4px 0 0 auto; }
+
+/* OVERVIEW GRID */
+.overview-grid { display:grid; grid-template-columns:1fr; gap:16px; }
+@media (min-width:640px) { .overview-grid { grid-template-columns:1fr 1fr; } }
+
+.ov-card {
+  background:var(--surface); border:1px solid var(--border);
+  border-radius:14px; padding:20px; cursor:pointer; transition:all 0.2s;
+}
+.ov-card:hover { border-color:var(--border2); transform:translateY(-2px); box-shadow:0 8px 28px var(--shadow); }
+.ov-card-header { display:flex;align-items:center;gap:12px;margin-bottom:14px; }
+.ov-icon { width:38px;height:38px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:18px; }
+.ov-title { font-size:14px;font-weight:700; }
+.ov-sub { font-size:11px;color:var(--text-muted); }
+.mini-row { display:flex;align-items:center;gap:8px;padding:7px 0;border-bottom:1px solid var(--border);font-size:12px; }
+.mini-row:last-child { border-bottom:none; }
+.mini-name { font-weight:700;width:90px;flex-shrink:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap; }
+.mini-prev { color:var(--text-muted);flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-weight:400; }
+.mini-time { font-family:'DM Mono',monospace;font-size:9px;color:var(--text-dim);flex-shrink:0; }
+
+/* WHATSAPP */
+.wa-item { display:flex;align-items:center;gap:12px;padding:11px 14px;border-radius:10px;cursor:pointer;transition:background 0.15s; }
+.wa-item:hover { background:var(--surface2); }
+.wa-av { width:46px;height:46px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:16px;font-weight:700;flex-shrink:0; }
+.wa-name { font-size:13px;font-weight:700;margin-bottom:2px; }
+.wa-msg { font-size:11px;color:var(--text-muted);font-weight:400; }
+.wa-right { margin-left:auto;text-align:right;flex-shrink:0; }
+.wa-time { font-family:'DM Mono',monospace;font-size:10px;color:var(--text-muted); }
+.wa-badge { background:var(--accent-green);color:#000;font-size:9px;font-weight:700;font-family:'DM Mono',monospace;padding:2px 6px;border-radius:10px;margin-top:4px;display:inline-block; }
+
+/* DOCUMENTS */
+.doc-grid { display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:12px; }
+@media (min-width:640px) { .doc-grid { grid-template-columns:repeat(auto-fill,minmax(190px,1fr)); gap:16px; } }
+.doc-card {
+  background:var(--surface);border:1px solid var(--border);
+  border-radius:12px;padding:18px;cursor:pointer;transition:all 0.2s;
+}
+.doc-card:hover { border-color:var(--border2);transform:translateY(-2px);box-shadow:0 8px 24px var(--shadow); }
+.doc-badge {
+  display:inline-flex;align-items:center;gap:5px;
+  font-family:'DM Mono',monospace;font-size:8px;letter-spacing:0.15em;
+  text-transform:uppercase;padding:3px 7px;border-radius:5px;margin-bottom:12px;font-weight:500;
+}
+.db-pdf{background:#ff3d7115;color:var(--accent-red)}
+.db-docx{background:#3d8eff15;color:var(--accent-blue)}
+.db-xlsx{background:#00e67615;color:var(--accent-green)}
+.db-pptx{background:#ffb30015;color:var(--accent-amber)}
+.db-folder{background:#c77dff15;color:var(--accent-purple)}
+.doc-name { font-size:12px;font-weight:700;margin-bottom:5px;line-height:1.3; }
+.doc-meta { font-family:'DM Mono',monospace;font-size:10px;color:var(--text-muted); }
+
+/* CALENDAR */
+.cal-grid-header { display:grid;grid-template-columns:repeat(7,1fr);gap:4px;margin-bottom:6px; }
+.cal-day-label { text-align:center;font-family:'DM Mono',monospace;font-size:10px;color:var(--text-muted);padding:4px 0; }
+.cal-grid { display:grid;grid-template-columns:repeat(7,1fr);gap:4px; }
+.cal-day {
+  aspect-ratio:1;border-radius:8px;display:flex;flex-direction:column;align-items:center;justify-content:center;
+  font-size:12px;font-weight:600;cursor:pointer;transition:all 0.15s;padding:2px;
+  border:1px solid transparent;
+}
+.cal-day:hover { background:var(--surface2);border-color:var(--border); }
+.cal-day.other-month { color:var(--text-dim); }
+.cal-day.today { background:var(--accent-blue);color:white;font-weight:800; }
+.cal-day.has-event::after { content:'';width:4px;height:4px;border-radius:50%;background:var(--accent-green);margin-top:2px; }
+.cal-day.today.has-event::after { background:white; }
+.event-list { margin-top:20px; }
+.event-item {
+  display:flex;align-items:center;gap:12px;padding:12px 14px;
+  border-radius:10px;background:var(--surface2);border:1px solid var(--border);
+  margin-bottom:8px;transition:all 0.15s;cursor:pointer;
+}
+.event-item:hover { border-color:var(--border2);transform:translateX(3px); }
+.event-dot { width:10px;height:10px;border-radius:50%;flex-shrink:0; }
+.event-time { font-family:'DM Mono',monospace;font-size:10px;color:var(--text-muted);width:50px;flex-shrink:0; }
+.event-name { font-size:13px;font-weight:600;flex:1; }
+.event-tag { font-family:'DM Mono',monospace;font-size:9px;padding:2px 7px;border-radius:5px;letter-spacing:0.1em; }
+
+/* TASKS */
+.task-item {
+  display:flex;align-items:center;gap:12px;padding:13px 16px;
+  border-radius:10px;border:1px solid var(--border);
+  background:var(--surface);margin-bottom:8px;transition:all 0.15s;cursor:pointer;
+}
+.task-item:hover { border-color:var(--border2);transform:translateX(3px); }
+.task-check {
+  width:20px;height:20px;border-radius:6px;border:2px solid var(--border2);
+  display:flex;align-items:center;justify-content:center;flex-shrink:0;
+  transition:all 0.2s;cursor:pointer;
+}
+.task-check.done { background:var(--accent-green);border-color:var(--accent-green); }
+.task-check.done::after { content:'✓';color:#000;font-size:11px;font-weight:800; }
+.task-text { font-size:13px;font-weight:600;flex:1; }
+.task-text.done { text-decoration:line-through;color:var(--text-muted); }
+.task-pri { font-family:'DM Mono',monospace;font-size:9px;padding:2px 7px;border-radius:5px;letter-spacing:0.1em;flex-shrink:0; }
+.pri-high{background:#ff3d7118;color:var(--accent-red)}
+.pri-med{background:#ffb30018;color:var(--accent-amber)}
+.pri-low{background:#3d8eff18;color:var(--accent-blue)}
+
+.add-task-row {
+  display:flex;gap:8px;margin-top:16px;
+}
+.add-task-input {
+  flex:1;background:var(--surface2);border:1px solid var(--border);
+  border-radius:9px;padding:10px 14px;color:var(--text);
+  font-family:'Syne',sans-serif;font-size:13px;outline:none;
+  transition:border-color 0.15s;
+}
+.add-task-input:focus { border-color:var(--accent-blue); }
+.add-task-input::placeholder { color:var(--text-dim); }
+
+/* NOTES */
+.notes-grid { display:grid;grid-template-columns:1fr;gap:12px; }
+@media (min-width:640px) { .notes-grid { grid-template-columns:repeat(2,1fr); } }
+@media (min-width:900px) { .notes-grid { grid-template-columns:repeat(3,1fr); } }
+
+.note-card {
+  background:var(--surface);border:1px solid var(--border);
+  border-radius:12px;padding:18px;cursor:pointer;transition:all 0.2s;
+  position:relative;overflow:hidden;
+}
+.note-card:hover { border-color:var(--border2);transform:translateY(-2px);box-shadow:0 8px 24px var(--shadow); }
+.note-card::before { content:'';position:absolute;top:0;left:0;right:0;height:3px; }
+.nc-blue::before{background:var(--accent-blue)} .nc-green::before{background:var(--accent-green)}
+.nc-amber::before{background:var(--accent-amber)} .nc-purple::before{background:var(--accent-purple)}
+.nc-red::before{background:var(--accent-red)}
+.note-title { font-size:13px;font-weight:700;margin-bottom:8px; }
+.note-body { font-size:12px;color:var(--text-muted);line-height:1.6;font-weight:400; }
+.note-footer { display:flex;align-items:center;justify-content:space-between;margin-top:12px; }
+.note-date { font-family:'DM Mono',monospace;font-size:9px;color:var(--text-dim); }
+.note-tag { font-family:'DM Mono',monospace;font-size:9px;padding:2px 7px;border-radius:5px;letter-spacing:0.1em; }
+
+.add-note-card {
+  background:var(--surface);border:2px dashed var(--border);
+  border-radius:12px;padding:18px;cursor:pointer;transition:all 0.2s;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  gap:8px;min-height:120px;color:var(--text-dim);font-size:13px;font-weight:600;
+}
+.add-note-card:hover { border-color:var(--accent-blue);color:var(--accent-blue); }
+
+/* NOTIFICATION PANEL */
+.notif-panel {
+  position:fixed;top:64px;right:12px;width:320px;
+  background:var(--surface);border:1px solid var(--border2);
+  border-radius:14px;box-shadow:0 16px 48px var(--shadow);
+  z-index:300;overflow:hidden;
+  transform:translateY(-10px) scale(0.97);opacity:0;
+  transition:all 0.2s;pointer-events:none;
+}
+.notif-panel.open { transform:translateY(0) scale(1);opacity:1;pointer-events:all; }
+@media (max-width:400px) { .notif-panel { left:12px;right:12px;width:auto; } }
+.notif-header {
+  display:flex;align-items:center;justify-content:space-between;
+  padding:14px 16px;border-bottom:1px solid var(--border);
+}
+.notif-title { font-size:13px;font-weight:700; }
+.notif-clear { font-family:'DM Mono',monospace;font-size:10px;color:var(--accent-blue);cursor:pointer; }
+.notif-item {
+  display:flex;align-items:flex-start;gap:10px;padding:12px 16px;
+  border-bottom:1px solid var(--border);transition:background 0.15s;cursor:pointer;
+}
+.notif-item:hover { background:var(--surface2); }
+.notif-item:last-child { border-bottom:none; }
+.notif-emoji { font-size:18px;flex-shrink:0;margin-top:1px; }
+.notif-text { font-size:12px;line-height:1.4; }
+.notif-text strong { font-weight:700; }
+.notif-ts { font-family:'DM Mono',monospace;font-size:9px;color:var(--text-muted);margin-top:2px; }
+
+/* TOAST */
+.toast-container { position:fixed;bottom:20px;right:20px;z-index:400;display:flex;flex-direction:column;gap:8px; }
+.toast {
+  background:var(--surface);border:1px solid var(--border2);
+  border-radius:10px;padding:12px 16px;
+  box-shadow:0 8px 24px var(--shadow);
+  display:flex;align-items:center;gap:10px;
+  font-size:12px;font-weight:600;min-width:220px;
+  animation:toastIn 0.3s ease;
+}
+@keyframes toastIn { from{opacity:0;transform:translateX(20px)} to{opacity:1;transform:translateX(0)} }
+.toast.out { animation:toastOut 0.3s ease forwards; }
+@keyframes toastOut { to{opacity:0;transform:translateX(20px)} }
+.toast-icon { font-size:16px; }
+
+/* SCROLLBAR */
+::-webkit-scrollbar{width:3px}
+::-webkit-scrollbar-track{background:transparent}
+::-webkit-scrollbar-thumb{background:var(--text-dim);border-radius:2px}
+
+.splash{position:fixed;inset:0;background:var(--bg);z-index:9999;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:20px;transition:opacity .6s,transform .6s}
+.splash.hide{opacity:0;pointer-events:none;transform:scale(1.03)}
+.splash-logo{font-size:36px;font-weight:800;letter-spacing:.22em;text-transform:uppercase}
+.splash-logo span{color:var(--accent-blue)}
+.splash-bar{width:220px;height:2px;background:var(--surface2);border-radius:2px;overflow:hidden}
+.splash-fill{height:100%;background:var(--accent-blue);width:0;transition:width .04s linear;border-radius:2px}
+.splash-lbl{font-family:'DM Mono',monospace;font-size:11px;color:var(--text-muted);letter-spacing:.15em}
+.gsearch-wrap{position:fixed;inset:0;background:#00000085;backdrop-filter:blur(8px);z-index:500;display:flex;align-items:flex-start;justify-content:center;padding-top:80px;opacity:0;pointer-events:none;transition:opacity .2s}
+.gsearch-wrap.open{opacity:1;pointer-events:all}
+.gsearch-box{background:var(--surface);border:1px solid var(--border2);border-radius:16px;width:92%;max-width:560px;overflow:hidden;box-shadow:0 24px 64px var(--shadow);transform:translateY(-10px) scale(.97);transition:transform .2s}
+.gsearch-wrap.open .gsearch-box{transform:translateY(0) scale(1)}
+.gs-row{display:flex;align-items:center;gap:10px;padding:16px 18px;border-bottom:1px solid var(--border)}
+.gs-input{flex:1;background:none;border:none;outline:none;color:var(--text);font-family:'Syne',sans-serif;font-size:16px;font-weight:600}
+.gs-input::placeholder{color:var(--text-dim)}
+.gs-esc{font-family:'DM Mono',monospace;font-size:10px;color:var(--text-muted);background:var(--surface2);padding:3px 8px;border-radius:5px;cursor:pointer}
+.gs-results{max-height:360px;overflow-y:auto;padding:8px}
+.gsr-sec{font-family:'DM Mono',monospace;font-size:9px;letter-spacing:.15em;text-transform:uppercase;color:var(--text-dim);padding:8px 10px 4px}
+.gsr-item{display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:9px;cursor:pointer;transition:background .15s}
+.gsr-item:hover{background:var(--surface2)}
+.gsr-icon{width:28px;height:28px;border-radius:7px;display:flex;align-items:center;justify-content:center;font-size:13px;flex-shrink:0}
+.gsr-name{font-size:13px;font-weight:600}.gsr-sub{font-size:11px;color:var(--text-muted);font-weight:400}
+.nmodal{position:fixed;inset:0;background:#00000085;backdrop-filter:blur(8px);z-index:600;display:flex;align-items:center;justify-content:center;padding:20px;opacity:0;pointer-events:none;transition:opacity .2s}
+.nmodal.open{opacity:1;pointer-events:all}
+.nmodal-box{background:var(--surface);border:1px solid var(--border2);border-radius:16px;width:100%;max-width:560px;overflow:hidden;box-shadow:0 24px 64px var(--shadow);transform:scale(.95);transition:transform .2s}
+.nmodal.open .nmodal-box{transform:scale(1)}
+.nm-top{display:flex;align-items:center;justify-content:space-between;padding:16px 18px;border-bottom:1px solid var(--border)}
+.nm-title{font-size:14px;font-weight:700}
+.nm-close{width:28px;height:28px;border-radius:7px;background:var(--surface2);border:none;cursor:pointer;font-size:14px;color:var(--text-muted);transition:all .15s;display:flex;align-items:center;justify-content:center}
+.nm-close:hover{background:var(--surface3);color:var(--text)}
+.nm-body{padding:18px}
+.nm-inp{width:100%;background:var(--surface2);border:1px solid var(--border);border-radius:9px;padding:10px 12px;color:var(--text);font-family:'Syne',sans-serif;font-size:14px;font-weight:700;outline:none;margin-bottom:10px;transition:border-color .15s}
+.nm-inp:focus,.nm-ta:focus{border-color:var(--accent-blue)}
+.nm-ta{width:100%;background:var(--surface2);border:1px solid var(--border);border-radius:9px;padding:10px 12px;color:var(--text);font-family:'Syne',sans-serif;font-size:13px;outline:none;resize:vertical;min-height:140px;line-height:1.6;transition:border-color .15s}
+.nm-foot{display:flex;justify-content:flex-end;gap:8px;padding:14px 18px;border-top:1px solid var(--border)}
+.contacts-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(155px,1fr));gap:12px}
+.cc{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:16px;cursor:pointer;transition:all .2s;text-align:center}
+.cc:hover{border-color:var(--border2);transform:translateY(-2px);box-shadow:0 6px 20px var(--shadow)}
+.cc-av{width:50px;height:50px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:17px;font-weight:700;margin:0 auto 10px}
+.cc-name{font-size:13px;font-weight:700;margin-bottom:3px}.cc-role{font-size:11px;color:var(--text-muted);margin-bottom:8px;font-weight:400}
+.cc-tags{display:flex;flex-wrap:wrap;gap:4px;justify-content:center}
+.ctag{font-family:'DM Mono',monospace;font-size:8px;padding:2px 6px;border-radius:5px;letter-spacing:.08em}
+.pom-wrap{display:flex;flex-direction:column;align-items:center;gap:22px}
+.pom-ring{position:relative;width:220px;height:220px}
+.pom-svg{transform:rotate(-90deg)}
+.pom-track{fill:none;stroke:var(--surface3);stroke-width:10}
+.pom-circ{fill:none;stroke:var(--accent-red);stroke-width:10;stroke-linecap:round;transition:stroke-dashoffset .5s linear,stroke .5s}
+.pom-center{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center}
+.pom-digits{font-family:'DM Mono',monospace;font-size:42px;font-weight:500;letter-spacing:-.02em}
+.pom-mode-lbl{font-family:'DM Mono',monospace;font-size:10px;letter-spacing:.2em;text-transform:uppercase;color:var(--text-muted);margin-top:4px}
+.pom-modes{display:flex;gap:6px;flex-wrap:wrap;justify-content:center}
+.pmb{background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:7px 14px;font-family:'DM Mono',monospace;font-size:10px;letter-spacing:.1em;cursor:pointer;transition:all .15s;color:var(--text-muted)}
+.pmb:hover{border-color:var(--border2);color:var(--text)}
+.pmb.active{background:color-mix(in srgb,var(--accent-red) 15%,transparent);border-color:var(--accent-red);color:var(--accent-red)}
+.pom-sdots{display:flex;gap:6px}
+.psdot{width:10px;height:10px;border-radius:50%;background:var(--surface3);transition:background .3s}
+.psdot.done{background:var(--accent-red)}
+.conn-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(195px,1fr));gap:12px}
+.cconn{background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:18px;transition:all .2s}
+.cconn.connected{border-color:color-mix(in srgb,var(--accent-green) 30%,transparent)}
+.cconn:hover{transform:translateY(-2px);box-shadow:0 8px 24px var(--shadow)}
+.cconn-logo{font-size:26px;margin-bottom:10px}
+.cconn-name{font-size:14px;font-weight:700;margin-bottom:3px}
+.cconn-desc{font-size:11px;color:var(--text-muted);margin-bottom:12px;font-weight:400;line-height:1.5}
+.cconn-status{display:flex;align-items:center;gap:6px;font-family:'DM Mono',monospace;font-size:10px;margin-bottom:12px}
+.csdot{width:7px;height:7px;border-radius:50%}
+.cson{background:var(--accent-green);box-shadow:0 0 6px var(--accent-green)}.csoff{background:var(--text-dim)}
+.cbtn{width:100%;padding:8px;border-radius:8px;font-family:'Syne',sans-serif;font-size:12px;font-weight:700;cursor:pointer;transition:all .15s;border:1px solid var(--border2);background:var(--surface2);color:var(--text)}
+.cbtn:hover{background:var(--surface3)}
+.cbtn.disc{background:color-mix(in srgb,var(--accent-red) 12%,transparent);border-color:color-mix(in srgb,var(--accent-red) 30%,transparent);color:var(--accent-red)}
+.cbtn.conn{background:var(--accent-blue);color:#fff;border-color:var(--accent-blue)}
+.ov-card[draggable]{position:relative;cursor:default}
+.wdh{position:absolute;top:10px;right:10px;cursor:grab;color:var(--text-dim);font-size:13px;padding:4px;border-radius:5px;z-index:2}
+.wdh:hover{color:var(--text-muted)}.wdh:active{cursor:grabbing}
+.ov-card.dragging{opacity:.5;transform:scale(.98)}
+.ov-card.drag-over{border-color:var(--accent-blue)!important;background:color-mix(in srgb,var(--accent-blue) 5%,var(--surface))}
+
+</style>
+</head>
+<body>
+
+<div class="splash" id="splash">
+  <div class="splash-logo">CMD<span>//</span>DASH</div>
+  <div class="splash-bar"><div class="splash-fill" id="splashFill"></div></div>
+  <div class="splash-lbl" id="splashLbl">Initialising...</div>
+</div>
+<div class="gsearch-wrap" id="gsearch" onclick="if(event.target===this)closeSearch()">
+  <div class="gsearch-box">
+    <div class="gs-row"><span style="color:var(--text-muted);font-size:16px">🔍</span><input class="gs-input" id="gsInput" placeholder="Search everything..." oninput="doSearch(this.value)"><span class="gs-esc" onclick="closeSearch()">ESC</span></div>
+    <div class="gs-results" id="gsResults"></div>
+  </div>
+</div>
+<div class="nmodal" id="nmodal" onclick="if(event.target===this)closeNote()">
+  <div class="nmodal-box">
+    <div class="nm-top"><div class="nm-title">Edit Note</div><button class="nm-close" onclick="closeNote()">✕</button></div>
+    <div class="nm-body"><input class="nm-inp" id="nmTitle" placeholder="Note title..."><textarea class="nm-ta" id="nmBody" placeholder="Write your note..."></textarea></div>
+    <div class="nm-foot"><button class="compose-btn" style="background:var(--surface2);color:var(--text);border:1px solid var(--border)" onclick="closeNote()">Cancel</button><button class="compose-btn" style="background:#ff3d7115;color:var(--accent-red);border:1px solid #ff3d7130" onclick="deleteNote()">Delete</button><button class="compose-btn" onclick="saveNote()">Save Note</button></div>
+  </div>
+</div>
+
+<div class="ambient">
+  <div class="ambient-blob blob1"></div>
+  <div class="ambient-blob blob2"></div>
+  <div class="ambient-blob blob3"></div>
+</div>
+
+<!-- TOPBAR -->
+<div class="topbar">
+  <div style="display:flex;align-items:center;gap:10px">
+    <div class="hamburger" id="hamburger" onclick="toggleSidebar()">
+      <span></span><span></span><span></span>
+    </div>
+    <div class="topbar-brand">CMD<span>//</span>DASH</div>
+  </div>
+  <div class="topbar-right">
+    <div class="time-display" id="clock">--:--:--</div>
+    <div class="icon-btn" onclick="toggleNotif()" title="Notifications">
+      🔔
+      <div class="notif-badge" id="notifBadge">4</div>
+    </div>
+    <div class="icon-btn" onclick="openSearch()" title="Search (/)">🔍</div>
+    <div class="icon-btn" onclick="toggleTheme()" id="themeBtn" title="Toggle theme">🌙</div>
+    <div class="status-pill">
+      <div class="status-dot"></div>
+      <span>Online</span>
+    </div>
+  </div>
+</div>
+
+<!-- NOTIFICATION PANEL -->
+<div class="notif-panel" id="notifPanel">
+  <div class="notif-header">
+    <div class="notif-title">Notifications</div>
+    <div class="notif-clear" onclick="clearNotifs()">Clear all</div>
+  </div>
+  <div id="notifList">
+    <div class="notif-item"><div class="notif-emoji">💬</div><div><div class="notif-text"><strong>Priya K.</strong> — Can we reschedule tomorrow?</div><div class="notif-ts">2 min ago · WhatsApp</div></div></div>
+    <div class="notif-item"><div class="notif-emoji">✉️</div><div><div class="notif-text"><strong>Dilshan S.</strong> — RE: CEP invoice batch</div><div class="notif-ts">18 min ago · Gmail</div></div></div>
+    <div class="notif-item"><div class="notif-emoji">📧</div><div><div class="notif-text"><strong>AGOC</strong> — Monthly progress review</div><div class="notif-ts">1 hr ago · Outlook</div></div></div>
+    <div class="notif-item"><div class="notif-emoji">📅</div><div><div class="notif-text"><strong>Reminder</strong> — CEP Site Meeting at 2:00 PM</div><div class="notif-ts">Today · Calendar</div></div></div>
+  </div>
+</div>
+
+<div class="sidebar-overlay" id="overlay" onclick="closeSidebar()"></div>
+
+<div class="layout">
+  <!-- SIDEBAR -->
+  <aside class="sidebar" id="sidebar">
+    <div class="sidebar-section">
+      <div class="sidebar-label">Overview</div>
+      <div class="nav-item active" onclick="switchPanel('overview',this)">
+        <div class="nav-icon" style="background:#3d8eff15">⊞</div> Dashboard
+      </div>
+    </div>
+    <div class="sidebar-section">
+      <div class="sidebar-label">Messaging</div>
+      <div class="nav-item" onclick="switchPanel('whatsapp',this)">
+        <div class="nav-icon" style="background:#00e67615">💬</div> WhatsApp
+        <span class="nav-badge nb-green">5</span>
+      </div>
+      <div class="nav-item" onclick="switchPanel('email',this)">
+        <div class="nav-icon" style="background:#ff3d7115">✉</div> Gmail
+        <span class="nav-badge nb-red">12</span>
+      </div>
+      <div class="nav-item" onclick="switchPanel('outlook',this)">
+        <div class="nav-icon" style="background:#3d8eff15">📧</div> Outlook
+        <span class="nav-badge nb-amber">3</span>
+      </div>
+    </div>
+    <div class="sidebar-section">
+      <div class="sidebar-label">Productivity</div>
+      <div class="nav-item" onclick="switchPanel('calendar',this)">
+        <div class="nav-icon" style="background:#c77dff15">📅</div> Calendar
+      </div>
+      <div class="nav-item" onclick="switchPanel('tasks',this)">
+        <div class="nav-icon" style="background:#ffb30015">✓</div> Tasks
+        <span class="nav-badge nb-amber" id="taskBadge">3</span>
+      </div>
+      <div class="nav-item" onclick="switchPanel('notes',this)">
+        <div class="nav-icon" style="background:#00e67615">📝</div> Quick Notes
+      </div>
+    </div>
+    <div class="sidebar-section">
+      <div class="sidebar-label">Files</div>
+      <div class="nav-item" onclick="switchPanel('documents',this)">
+        <div class="nav-icon" style="background:#ffb30015">📁</div> Documents
+      </div>
+    </div>
+
+    <div class="sidebar-section">
+      <div class="sidebar-label">People</div>
+      <div class="nav-item" onclick="switchPanel('contacts',this)"><div class="nav-icon" style="background:#c77dff15">👥</div>Contacts</div>
+    </div>
+    <div class="sidebar-section">
+      <div class="sidebar-label">Focus</div>
+      <div class="nav-item" onclick="switchPanel('pomodoro',this)"><div class="nav-icon" style="background:#ff3d7115">🍅</div>Focus Timer</div>
+    </div>
+    <div class="sidebar-section">
+      <div class="sidebar-label">Connections</div>
+      <div class="nav-item" onclick="switchPanel('connections',this)"><div class="nav-icon" style="background:#3d8eff15">⚡</div>Integrations<span class="nav-badge" style="background:var(--accent-red)">2</span></div>
+    </div>
+  </aside>
+
+  <!-- MAIN -->
+  <main class="main">
+
+    <!-- OVERVIEW -->
+    <div class="panel active" id="panel-overview">
+      <div class="panel-header">
+        <div>
+          <div class="panel-title">Good morning ✦</div>
+          <div class="panel-subtitle" id="dateDisplay">Loading...</div>
+        </div>
+      </div>
+      <div class="stats-row">
+        <div class="stat-card sc-green" onclick="switchPanel('whatsapp',null)">
+          <div class="stat-label">WhatsApp</div>
+          <div class="stat-value">5</div>
+          <div class="stat-sub">unread</div>
+        </div>
+        <div class="stat-card sc-red" onclick="switchPanel('email',null)">
+          <div class="stat-label">Gmail</div>
+          <div class="stat-value">12</div>
+          <div class="stat-sub">unread</div>
+        </div>
+        <div class="stat-card sc-amber" onclick="switchPanel('outlook',null)">
+          <div class="stat-label">Outlook</div>
+          <div class="stat-value">3</div>
+          <div class="stat-sub">pending</div>
+        </div>
+        <div class="stat-card sc-purple" onclick="switchPanel('tasks',null)">
+          <div class="stat-label">Tasks</div>
+          <div class="stat-value" id="ovTaskCount">3</div>
+          <div class="stat-sub">open</div>
+        </div>
+      </div>
+      <div class="overview-grid">
+        <div class="ov-card" draggable="true" onclick="switchPanel('whatsapp',null)">
+          <div class="ov-card-header">
+            <div class="ov-icon" style="background:#00e67615">💬</div>
+            <div><div class="ov-title">WhatsApp</div><div class="ov-sub">5 unread</div></div>
+          </div>
+          <div class="mini-row"><div class="mini-name">Priya K.</div><div class="mini-prev">Can we reschedule tomorrow?</div><div class="mini-time">09:14</div></div>
+          <div class="mini-row"><div class="mini-name">Team SG</div><div class="mini-prev">ESG report ready for review</div><div class="mini-time">08:52</div></div>
+          <div class="mini-row"><div class="mini-name">Rajan</div><div class="mini-prev">Flights confirmed ✓</div><div class="mini-time">07:30</div></div>
+        </div>
+        <div class="ov-card" draggable="true" onclick="switchPanel('email',null)">
+          <div class="ov-card-header">
+            <div class="ov-icon" style="background:#ff3d7115">✉</div>
+            <div><div class="ov-title">Gmail</div><div class="ov-sub">12 unread</div></div>
+          </div>
+          <div class="mini-row"><div class="mini-name">Anthropic</div><div class="mini-prev">API usage summary March</div><div class="mini-time">10:01</div></div>
+          <div class="mini-row"><div class="mini-name">Bank of Ceylon</div><div class="mini-prev">Statement available</div><div class="mini-time">09:45</div></div>
+          <div class="mini-row"><div class="mini-name">Dilshan S.</div><div class="mini-prev">RE: CEP invoice batch</div><div class="mini-time">08:20</div></div>
+        </div>
+        <div class="ov-card" draggable="true" onclick="switchPanel('calendar',null)">
+          <div class="ov-card-header">
+            <div class="ov-icon" style="background:#c77dff15">📅</div>
+            <div><div class="ov-title">Today's Schedule</div><div class="ov-sub">3 events</div></div>
+          </div>
+          <div class="mini-row"><div class="mini-name">09:00</div><div class="mini-prev">Synergy team standup</div><div class="mini-time">30m</div></div>
+          <div class="mini-row"><div class="mini-name">14:00</div><div class="mini-prev">CEP site meeting</div><div class="mini-time">2h</div></div>
+          <div class="mini-row"><div class="mini-name">17:00</div><div class="mini-prev">ESG client call — SG</div><div class="mini-time">1h</div></div>
+        </div>
+        <div class="ov-card" draggable="true" onclick="switchPanel('tasks',null)">
+          <div class="ov-card-header">
+            <div class="ov-icon" style="background:#ffb30015">✓</div>
+            <div><div class="ov-title">Tasks</div><div class="ov-sub">3 open</div></div>
+          </div>
+          <div class="mini-row"><div class="mini-name">HIGH</div><div class="mini-prev">Submit CEP monthly report</div><div class="mini-time">Today</div></div>
+          <div class="mini-row"><div class="mini-name">MED</div><div class="mini-prev">Review ESG framework v3</div><div class="mini-time">Thu</div></div>
+          <div class="mini-row"><div class="mini-name">LOW</div><div class="mini-prev">Update GreenCore CRM</div><div class="mini-time">Fri</div></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- WHATSAPP -->
+    <div class="panel" id="panel-whatsapp">
+      <div class="panel-header">
+        <div><div class="panel-title">WhatsApp</div><div class="panel-subtitle">5 unread conversations</div></div>
+        <button class="btn btn-green">+ New Chat</button>
+      </div>
+      <div class="search-wrap"><span style="color:var(--text-muted)">🔍</span><input placeholder="Search conversations..."></div>
+      <div class="section-title">Unread</div>
+      <div class="msg-list">
+        <div class="wa-item"><div class="wa-av" style="background:#00e67620;color:var(--accent-green)">PK</div><div style="flex:1;min-width:0"><div class="wa-name">Priya Kumari</div><div class="wa-msg">Can we reschedule tomorrow's call?</div></div><div class="wa-right"><div class="wa-time">09:14</div><div class="wa-badge">2</div></div></div>
+        <div class="wa-item"><div class="wa-av" style="background:#3d8eff20;color:var(--accent-blue)">SG</div><div style="flex:1;min-width:0"><div class="wa-name">Team Singapore</div><div class="wa-msg">ESG report is ready for review</div></div><div class="wa-right"><div class="wa-time">08:52</div><div class="wa-badge">1</div></div></div>
+        <div class="wa-item"><div class="wa-av" style="background:#ffb30020;color:var(--accent-amber)">RJ</div><div style="flex:1;min-width:0"><div class="wa-name">Rajan</div><div class="wa-msg">Flights to Singapore confirmed ✓</div></div><div class="wa-right"><div class="wa-time">07:30</div><div class="wa-badge">1</div></div></div>
+      </div>
+      <div class="section-title">Recent</div>
+      <div class="msg-list">
+        <div class="wa-item"><div class="wa-av" style="background:#ff3d7120;color:var(--accent-red)">AM</div><div style="flex:1;min-width:0"><div class="wa-name">Amara Mendis</div><div class="wa-msg">Will send the docs by EOD</div></div><div class="wa-right"><div class="wa-time">Yesterday</div></div></div>
+        <div class="wa-item"><div class="wa-av" style="background:#00e67620;color:var(--accent-green)">DW</div><div style="flex:1;min-width:0"><div class="wa-name">Dinesh W.</div><div class="wa-msg">Site inspection done, report coming</div></div><div class="wa-right"><div class="wa-time">Monday</div></div></div>
+      </div>
+    </div>
+
+    <!-- GMAIL -->
+    <div class="panel" id="panel-email">
+      <div class="panel-header">
+        <div><div class="panel-title">Gmail</div><div class="panel-subtitle">12 unread emails</div></div>
+        <button class="btn btn-blue">✏ Compose</button>
+      </div>
+      <div class="search-wrap"><span style="color:var(--text-muted)">🔍</span><input placeholder="Search mail..."></div>
+      <div class="section-title">Unread</div>
+      <div class="msg-list">
+        <div class="msg-item unread"><div class="avatar" style="background:#3d8eff20;color:var(--accent-blue);font-size:11px">ANT</div><div style="min-width:0"><div class="msg-name">Anthropic</div><div class="msg-preview">Your API usage summary for March 2026</div></div><div style="text-align:right"><div class="msg-time">10:01</div><div class="unread-dot"></div></div></div>
+        <div class="msg-item unread"><div class="avatar" style="background:#00e67620;color:var(--accent-green);font-size:11px">BOC</div><div style="min-width:0"><div class="msg-name">Bank of Ceylon</div><div class="msg-preview">Your Feb account statement is available</div></div><div style="text-align:right"><div class="msg-time">09:45</div><div class="unread-dot"></div></div></div>
+        <div class="msg-item unread"><div class="avatar" style="background:#ffb30020;color:var(--accent-amber)">DS</div><div style="min-width:0"><div class="msg-name">Dilshan S.</div><div class="msg-preview">RE: CEP invoice batch — revised schedule attached</div></div><div style="text-align:right"><div class="msg-time">08:20</div><div class="unread-dot"></div></div></div>
+        <div class="msg-item unread"><div class="avatar" style="background:#ff3d7120;color:var(--accent-red)">GC</div><div style="min-width:0"><div class="msg-name">GreenCore Supply</div><div class="msg-preview">New supplier inquiry from Melbourne</div></div><div style="text-align:right"><div class="msg-time">07:55</div><div class="unread-dot"></div></div></div>
+      </div>
+      <div class="section-title">Earlier</div>
+      <div class="msg-list">
+        <div class="msg-item"><div class="avatar" style="background:#3d8eff15;color:var(--accent-blue)">LI</div><div style="min-width:0"><div class="msg-name">LinkedIn</div><div class="msg-preview">3 new connection requests waiting</div></div><div class="msg-time">06:00</div></div>
+        <div class="msg-item"><div class="avatar" style="background:#00e67615;color:var(--accent-green)">GH</div><div style="min-width:0"><div class="msg-name">GitHub</div><div class="msg-preview">Your repository Test received a new star</div></div><div class="msg-time">05:30</div></div>
+      </div>
+    </div>
+
+    <!-- OUTLOOK -->
+    <div class="panel" id="panel-outlook">
+      <div class="panel-header">
+        <div><div class="panel-title">Outlook</div><div class="panel-subtitle">3 pending replies</div></div>
+        <button class="btn btn-blue">✏ New Email</button>
+      </div>
+      <div class="search-wrap"><span style="color:var(--text-muted)">🔍</span><input placeholder="Search Outlook..."></div>
+      <div class="section-title">Needs Reply</div>
+      <div class="msg-list">
+        <div class="msg-item unread"><div class="avatar" style="background:#3d8eff20;color:var(--accent-blue);font-size:11px">AGO</div><div style="min-width:0"><div class="msg-name">AGOC — Project Manager</div><div class="msg-preview">Monthly progress review — confirm Thursday 2pm</div></div><div style="text-align:right"><div class="msg-time">Yesterday</div><div class="unread-dot"></div></div></div>
+        <div class="msg-item unread"><div class="avatar" style="background:#ffb30020;color:var(--accent-amber)">HR</div><div style="min-width:0"><div class="msg-name">HR Department</div><div class="msg-preview">Leave policy update — acknowledgement required</div></div><div style="text-align:right"><div class="msg-time">Yesterday</div><div class="unread-dot"></div></div></div>
+        <div class="msg-item unread"><div class="avatar" style="background:#00e67620;color:var(--accent-green)">FIN</div><div style="min-width:0"><div class="msg-name">Finance — Synergy</div><div class="msg-preview">Q1 2026 budget approval — LKR 4.2M pending sign-off</div></div><div style="text-align:right"><div class="msg-time">Monday</div><div class="unread-dot"></div></div></div>
+      </div>
+      <div class="section-title">Read</div>
+      <div class="msg-list">
+        <div class="msg-item"><div class="avatar" style="background:#ff3d7115;color:var(--accent-red)">IT</div><div style="min-width:0"><div class="msg-name">IT Support</div><div class="msg-preview">VPN certificate renewal completed</div></div><div class="msg-time">Last week</div></div>
+        <div class="msg-item"><div class="avatar" style="background:#3d8eff15;color:var(--accent-blue)">MS</div><div style="min-width:0"><div class="msg-name">Microsoft 365</div><div class="msg-preview">Subscription renews April 15</div></div><div class="msg-time">Last week</div></div>
+      </div>
+    </div>
+
+    <!-- CALENDAR -->
+    <div class="panel" id="panel-calendar">
+      <div class="panel-header">
+        <div><div class="panel-title">Calendar</div><div class="panel-subtitle" id="calMonthLabel">March 2026</div></div>
+        <div style="display:flex;gap:8px">
+          <button class="btn btn-ghost" onclick="changeMonth(-1)">‹</button>
+          <button class="btn btn-ghost" onclick="changeMonth(1)">›</button>
+          <button class="btn btn-blue">+ Event</button>
+        </div>
+      </div>
+      <div style="background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:20px">
+        <div class="cal-grid-header">
+          <div class="cal-day-label">Su</div><div class="cal-day-label">Mo</div>
+          <div class="cal-day-label">Tu</div><div class="cal-day-label">We</div>
+          <div class="cal-day-label">Th</div><div class="cal-day-label">Fr</div>
+          <div class="cal-day-label">Sa</div>
+        </div>
+        <div class="cal-grid" id="calGrid"></div>
+      </div>
+      <div class="event-list">
+        <div class="section-title">Today's Events</div>
+        <div class="event-item"><div class="event-dot" style="background:var(--accent-blue)"></div><div class="event-time">09:00</div><div class="event-name">Synergy Team Standup</div><span class="event-tag" style="background:#3d8eff15;color:var(--accent-blue)">INTERNAL</span></div>
+        <div class="event-item"><div class="event-dot" style="background:var(--accent-red)"></div><div class="event-time">14:00</div><div class="event-name">CEP Site Meeting — KM 42</div><span class="event-tag" style="background:#ff3d7115;color:var(--accent-red)">CEP</span></div>
+        <div class="event-item"><div class="event-dot" style="background:var(--accent-green)"></div><div class="event-time">17:00</div><div class="event-name">ESG Client Call — Singapore</div><span class="event-tag" style="background:#00e67615;color:var(--accent-green)">ESG</span></div>
+        <div class="section-title">Upcoming</div>
+        <div class="event-item"><div class="event-dot" style="background:var(--accent-amber)"></div><div class="event-time">Thu 10:00</div><div class="event-name">AGOC Monthly Progress Review</div><span class="event-tag" style="background:#ffb30015;color:var(--accent-amber)">AGOC</span></div>
+        <div class="event-item"><div class="event-dot" style="background:var(--accent-purple)"></div><div class="event-time">Fri 14:00</div><div class="event-name">York Street Dev Meeting</div><span class="event-tag" style="background:#c77dff15;color:var(--accent-purple)">REALTY</span></div>
+      </div>
+    </div>
+
+    <!-- TASKS -->
+    <div class="panel" id="panel-tasks">
+      <div class="panel-header">
+        <div><div class="panel-title">Tasks</div><div class="panel-subtitle" id="taskSubtitle">3 open tasks</div></div>
+        <button class="btn btn-blue" onclick="document.getElementById('newTaskInput').focus()">+ Add Task</button>
+      </div>
+      <div class="section-title">High Priority</div>
+      <div id="taskList"></div>
+      <div class="section-title">This Week</div>
+      <div id="taskListMed"></div>
+      <div class="add-task-row">
+        <input class="add-task-input" id="newTaskInput" placeholder="Add a new task and press Enter..." onkeydown="addTask(event)">
+        <button class="btn btn-blue" onclick="addTask({key:'Enter'})">Add</button>
+      </div>
+    </div>
+
+    <!-- NOTES -->
+    <div class="panel" id="panel-notes">
+      <div class="panel-header">
+        <div><div class="panel-title">Quick Notes</div><div class="panel-subtitle">6 notes</div></div>
+      </div>
+      <div class="notes-grid" id="notesGrid"></div>
+    </div>
+
+    <!-- DOCUMENTS -->
+    <div class="panel" id="panel-documents">
+      <div class="panel-header">
+        <div><div class="panel-title">Documents</div><div class="panel-subtitle">24 files across all folders</div></div>
+        <button class="btn btn-blue">↑ Upload</button>
+      </div>
+      <div class="search-wrap"><span style="color:var(--text-muted)">🔍</span><input placeholder="Search documents..."></div>
+      <div class="section-title">Recent</div>
+      <div class="doc-grid">
+        <div class="doc-card"><div class="doc-badge db-pdf">● PDF</div><div class="doc-name">CEP Highway Report March 2026</div><div class="doc-meta">2.4 MB · Today</div></div>
+        <div class="doc-card"><div class="doc-badge db-docx">● DOCX</div><div class="doc-name">ESG Framework v3 Final</div><div class="doc-meta">840 KB · Yesterday</div></div>
+        <div class="doc-card"><div class="doc-badge db-xlsx">● XLSX</div><div class="doc-name">Synergy Budget Q1 2026</div><div class="doc-meta">1.1 MB · Monday</div></div>
+        <div class="doc-card"><div class="doc-badge db-pptx">● PPTX</div><div class="doc-name">GreenCore Investor Deck</div><div class="doc-meta">5.8 MB · Last week</div></div>
+        <div class="doc-card"><div class="doc-badge db-pdf">● PDF</div><div class="doc-name">York Street Dev Brief</div><div class="doc-meta">3.2 MB · Last week</div></div>
+        <div class="doc-card"><div class="doc-badge db-xlsx">● XLSX</div><div class="doc-name">LuminX Cost Model v2</div><div class="doc-meta">620 KB · Last week</div></div>
+        <div class="doc-card"><div class="doc-badge db-docx">● DOCX</div><div class="doc-name">SiteSupply Scope of Work</div><div class="doc-meta">480 KB · 2 weeks ago</div></div>
+        <div class="doc-card"><div class="doc-badge db-pdf">● PDF</div><div class="doc-name">Project Blue Gold Biz Plan</div><div class="doc-meta">4.1 MB · 2 weeks ago</div></div>
+      </div>
+      <div class="section-title">Folders</div>
+      <div class="doc-grid">
+        <div class="doc-card" style="display:flex;align-items:center;gap:12px;padding:14px 16px"><div style="font-size:24px">📁</div><div><div class="doc-name">CEP Project</div><div class="doc-meta">8 files</div></div></div>
+        <div class="doc-card" style="display:flex;align-items:center;gap:12px;padding:14px 16px"><div style="font-size:24px">📁</div><div><div class="doc-name">ESG & GreenCore</div><div class="doc-meta">6 files</div></div></div>
+        <div class="doc-card" style="display:flex;align-items:center;gap:12px;padding:14px 16px"><div style="font-size:24px">📁</div><div><div class="doc-name">Business Development</div><div class="doc-meta">5 files</div></div></div>
+        <div class="doc-card" style="display:flex;align-items:center;gap:12px;padding:14px 16px"><div style="font-size:24px">📁</div><div><div class="doc-name">Finance & Legal</div><div class="doc-meta">5 files</div></div></div>
+      </div>
+    </div>
+
+
+    <!-- CONTACTS -->
+    <div class="panel" id="panel-contacts">
+      <div class="panel-header"><div><div class="panel-title">Contacts</div><div class="panel-subtitle">12 contacts</div></div><button class="compose-btn">+ Add Contact</button></div>
+      <div class="search-bar" style="margin-bottom:20px;max-width:300px"><span style="color:var(--text-muted)">🔍</span><input type="text" placeholder="Search contacts..."></div>
+      <div class="section-title">Team &amp; Partners</div>
+      <div class="contacts-grid">
+        <div class="cc"><div class="cc-av" style="background:#00e67620;color:var(--accent-green)">PK</div><div class="cc-name">Priya Kumari</div><div class="cc-role">ESG Consultant</div><div class="cc-tags"><span class="ctag" style="background:#00e67615;color:var(--accent-green)">ESG</span><span class="ctag" style="background:#3d8eff15;color:var(--accent-blue)">SG</span></div></div>
+        <div class="cc"><div class="cc-av" style="background:#3d8eff20;color:var(--accent-blue)">DS</div><div class="cc-name">Dilshan S.</div><div class="cc-role">QS — Synergy</div><div class="cc-tags"><span class="ctag" style="background:#3d8eff15;color:var(--accent-blue)">CEP</span></div></div>
+        <div class="cc"><div class="cc-av" style="background:#ffab0020;color:var(--accent-amber)">RJ</div><div class="cc-name">Rajan</div><div class="cc-role">Site Supervisor</div><div class="cc-tags"><span class="ctag" style="background:#ffab0015;color:var(--accent-amber)">CEP</span></div></div>
+        <div class="cc"><div class="cc-av" style="background:#ff174420;color:var(--accent-red)">AM</div><div class="cc-name">Amara Mendis</div><div class="cc-role">Legal Counsel</div><div class="cc-tags"><span class="ctag" style="background:#ff174415;color:var(--accent-red)">LEGAL</span></div></div>
+        <div class="cc"><div class="cc-av" style="background:#c77dff20;color:var(--accent-purple)">DW</div><div class="cc-name">Dinesh W.</div><div class="cc-role">Drone Surveyor</div><div class="cc-tags"><span class="ctag" style="background:#c77dff15;color:var(--accent-purple)">SURVEY</span></div></div>
+        <div class="cc"><div class="cc-av" style="background:#00e67620;color:var(--accent-green)">SC</div><div class="cc-name">Sarah Chen</div><div class="cc-role">Nexus Capital · Melbourne</div><div class="cc-tags"><span class="ctag" style="background:#00e67615;color:var(--accent-green)">ESG</span><span class="ctag" style="background:#3d8eff15;color:var(--accent-blue)">LEAD</span></div></div>
+        <div class="cc"><div class="cc-av" style="background:#ffab0020;color:var(--accent-amber)">AG</div><div class="cc-name">AGOC PM</div><div class="cc-role">Project Manager</div><div class="cc-tags"><span class="ctag" style="background:#ffab0015;color:var(--accent-amber)">AGOC</span></div></div>
+        <div class="cc" style="border:2px dashed var(--border);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;cursor:pointer" onclick="showToast('👤','Contact form coming soon')"><div style="font-size:26px">+</div><div class="cc-name">Add Contact</div></div>
+      </div>
+    </div>
+
+    <!-- POMODORO -->
+    <div class="panel" id="panel-pomodoro">
+      <div class="panel-header"><div><div class="panel-title">Focus Timer</div><div class="panel-subtitle">Pomodoro technique</div></div></div>
+      <div class="pom-wrap">
+        <div class="pom-modes">
+          <div class="pmb active" onclick="setPomMode('focus',25,this)">Focus 25m</div>
+          <div class="pmb" onclick="setPomMode('short',5,this)">Short Break 5m</div>
+          <div class="pmb" onclick="setPomMode('long',15,this)">Long Break 15m</div>
+        </div>
+        <div class="pom-ring">
+          <svg class="pom-svg" width="220" height="220" viewBox="0 0 220 220">
+            <circle class="pom-track" cx="110" cy="110" r="95"/>
+            <circle class="pom-circ" id="pomC" cx="110" cy="110" r="95" stroke-dasharray="596.9" stroke-dashoffset="0"/>
+          </svg>
+          <div class="pom-center"><div class="pom-digits" id="pomTime">25:00</div><div class="pom-mode-lbl" id="pomLbl">FOCUS</div></div>
+        </div>
+        <div class="pom-sdots" id="pomDots"><div class="psdot"></div><div class="psdot"></div><div class="psdot"></div><div class="psdot"></div></div>
+        <div style="display:flex;gap:10px">
+          <button class="compose-btn" id="pomBtn" onclick="togglePom()">&#9654; Start</button>
+          <button class="compose-btn" style="background:var(--surface2);color:var(--text);border:1px solid var(--border)" onclick="resetPom()">&#8635; Reset</button>
+        </div>
+        <div style="width:100%;max-width:400px">
+          <div class="section-title">Session Log</div>
+          <div id="pomLog"><div id="pomEmpty" style="font-size:12px;color:var(--text-muted);font-family:'DM Mono',monospace;text-align:center;padding:16px 0">No sessions yet today</div></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- CONNECTIONS -->
+    <div class="panel" id="panel-connections">
+      <div class="panel-header"><div><div class="panel-title">Integrations</div><div class="panel-subtitle">Connect your apps and services</div></div></div>
+      <div class="section-title">Connected</div>
+      <div class="conn-grid">
+        <div class="cconn connected"><div class="cconn-logo">📧</div><div class="cconn-name">Gmail</div><div class="cconn-desc">Google email and labels synced</div><div class="cconn-status"><div class="csdot cson"></div><span style="color:var(--accent-green)">Connected</span></div><button class="cbtn disc" onclick="toggleConn(this,'Gmail')">Disconnect</button></div>
+        <div class="cconn connected"><div class="cconn-logo">📅</div><div class="cconn-name">Google Calendar</div><div class="cconn-desc">Events and reminders synced</div><div class="cconn-status"><div class="csdot cson"></div><span style="color:var(--accent-green)">Connected</span></div><button class="cbtn disc" onclick="toggleConn(this,'Google Calendar')">Disconnect</button></div>
+      </div>
+      <div class="section-title">Available</div>
+      <div class="conn-grid">
+        <div class="cconn"><div class="cconn-logo">🪟</div><div class="cconn-name">Microsoft Outlook</div><div class="cconn-desc">Email, calendar, and contacts from Microsoft</div><div class="cconn-status"><div class="csdot csoff"></div><span style="color:var(--text-muted)">Not connected</span></div><button class="cbtn conn" onclick="toggleConn(this,'Outlook')">Connect</button></div>
+        <div class="cconn"><div class="cconn-logo">🎥</div><div class="cconn-name">Zoom</div><div class="cconn-desc">Join meetings, see upcoming calls in calendar</div><div class="cconn-status"><div class="csdot csoff"></div><span style="color:var(--text-muted)">Not connected</span></div><button class="cbtn conn" onclick="toggleConn(this,'Zoom')">Connect</button></div>
+        <div class="cconn"><div class="cconn-logo">💼</div><div class="cconn-name">Microsoft Teams</div><div class="cconn-desc">Chats, channels, and meetings from Teams</div><div class="cconn-status"><div class="csdot csoff"></div><span style="color:var(--text-muted)">Not connected</span></div><button class="cbtn conn" onclick="toggleConn(this,'Teams')">Connect</button></div>
+        <div class="cconn"><div class="cconn-logo">📄</div><div class="cconn-name">Office 365</div><div class="cconn-desc">Word, Excel, PowerPoint — open docs online</div><div class="cconn-status"><div class="csdot csoff"></div><span style="color:var(--text-muted)">Not connected</span></div><button class="cbtn conn" onclick="toggleConn(this,'Office 365')">Connect</button></div>
+        <div class="cconn"><div class="cconn-logo">💬</div><div class="cconn-name">WhatsApp Business</div><div class="cconn-desc">WhatsApp Web API for business messaging</div><div class="cconn-status"><div class="csdot csoff"></div><span style="color:var(--text-muted)">Not connected</span></div><button class="cbtn conn" onclick="toggleConn(this,'WhatsApp Business')">Connect</button></div>
+        <div class="cconn"><div class="cconn-logo">📁</div><div class="cconn-name">Google Drive</div><div class="cconn-desc">Access and attach Drive files in document manager</div><div class="cconn-status"><div class="csdot csoff"></div><span style="color:var(--text-muted)">Not connected</span></div><button class="cbtn conn" onclick="toggleConn(this,'Google Drive')">Connect</button></div>
+        <div class="cconn"><div class="cconn-logo">🔔</div><div class="cconn-name">Slack</div><div class="cconn-desc">Team messages and channel notifications</div><div class="cconn-status"><div class="csdot csoff"></div><span style="color:var(--text-muted)">Not connected</span></div><button class="cbtn conn" onclick="toggleConn(this,'Slack')">Connect</button></div>
+        <div class="cconn" style="border:2px dashed var(--border);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;cursor:pointer;min-height:150px" onclick="showToast('⚡','Custom API integration coming soon')"><div style="font-size:26px">+</div><div style="font-size:13px;font-weight:700">Add Custom</div><div style="font-size:11px;color:var(--text-muted)">API / Webhook</div></div>
+      </div>
+    </div>
+
+  </main>
+</div>
+
+<!-- TOAST CONTAINER -->
+<div class="toast-container" id="toastContainer"></div>
+
+<script>
+// ── STORAGE HELPERS ──
+function lsGet(k, def) { try { var v = localStorage.getItem(k); return v !== null ? JSON.parse(v) : def; } catch(e) { return def; } }
+function lsSet(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch(e) {} }
+
+// ── CLOCK ──
+function tick() {
+  var clockEl = document.getElementById('clock');
+  var dateEl = document.getElementById('dateDisplay');
+  var now = new Date();
+  var h = now.getHours();
+  var greeting = h < 12 ? 'Good morning' : h < 17 ? 'Good afternoon' : 'Good evening';
+  var greetEl = document.querySelector('#panel-overview .panel-title');
+  if (greetEl && !greetEl.dataset.custom) greetEl.textContent = greeting + ' ✦';
+  if (clockEl) clockEl.textContent = now.toLocaleTimeString('en-GB', {hour12: false});
+  if (dateEl) dateEl.textContent = now.toLocaleDateString('en-GB', {weekday:'long', day:'numeric', month:'long', year:'numeric'});
+}
+tick();
+setInterval(tick, 1000);
+
+// ── THEME ──
+var isDark = lsGet('theme', 'dark') === 'dark';
+function applyTheme() {
+  document.documentElement.setAttribute('data-theme', isDark ? 'dark' : 'light');
+  var btn = document.getElementById('themeBtn');
+  if (btn) btn.textContent = isDark ? '🌙' : '☀️';
+}
+applyTheme();
+function toggleTheme() {
+  isDark = !isDark;
+  lsSet('theme', isDark ? 'dark' : 'light');
+  applyTheme();
+  showToast(isDark ? '🌙' : '☀️', isDark ? 'Dark mode' : 'Light mode');
+}
+
+// ── SIDEBAR ──
+function toggleSidebar() {
+  var s = document.getElementById('sidebar');
+  var h = document.getElementById('hamburger');
+  var o = document.getElementById('overlay');
+  var open = s.classList.toggle('open');
+  h.classList.toggle('open', open);
+  o.classList.toggle('active', open);
+}
+function closeSidebar() {
+  document.getElementById('sidebar').classList.remove('open');
+  document.getElementById('hamburger').classList.remove('open');
+  document.getElementById('overlay').classList.remove('active');
+}
+
+// ── SWIPE TO CLOSE SIDEBAR ──
+var tsX = 0;
+document.addEventListener('touchstart', function(e) { tsX = e.touches[0].clientX; }, {passive:true});
+document.addEventListener('touchend', function(e) {
+  var dx = e.changedTouches[0].clientX - tsX;
+  if (dx < -60 && document.getElementById('sidebar').classList.contains('open')) closeSidebar();
+}, {passive:true});
+
+// ── PANELS ──
+function switchPanel(name, navEl) {
+  document.querySelectorAll('.panel').forEach(function(p) { p.classList.remove('active'); });
+  var panel = document.getElementById('panel-' + name);
+  if (!panel) return;
+  panel.classList.add('active');
+  panel.classList.remove('panel-enter');
+  void panel.offsetWidth;
+  panel.classList.add('panel-enter');
+  document.querySelectorAll('.nav-item').forEach(function(n) { n.classList.remove('active'); });
+  if (navEl) {
+    navEl.classList.add('active');
+  } else {
+    var q = String.fromCharCode(39);
+    document.querySelectorAll('.nav-item').forEach(function(n) {
+      var oc = n.getAttribute('onclick') || '';
+      if (oc.indexOf(q + name + q) !== -1) n.classList.add('active');
+    });
+  }
+  closeSidebar();
+}
+
+// ── NOTIFICATIONS ──
+var notifOpen = false;
+function toggleNotif() {
+  notifOpen = !notifOpen;
+  document.getElementById('notifPanel').classList.toggle('open', notifOpen);
+}
+function clearNotifs() {
+  document.getElementById('notifList').innerHTML = '<div style="padding:20px;text-align:center;color:var(--text-muted);font-size:12px">No new notifications</div>';
+  document.getElementById('notifBadge').style.display = 'none';
+  notifOpen = false;
+  document.getElementById('notifPanel').classList.remove('open');
+  showToast('✓', 'Notifications cleared');
+}
+document.addEventListener('click', function(e) {
+  if (notifOpen && !e.target.closest('.notif-panel') && !e.target.closest('#notifBtn')) {
+    notifOpen = false;
+    document.getElementById('notifPanel').classList.remove('open');
+  }
+});
+
+// ── TOAST ──
+function showToast(icon, msg) {
+  var c = document.getElementById('toastContainer');
+  var t = document.createElement('div');
+  t.className = 'toast';
+  t.innerHTML = '<span class="toast-icon">' + icon + '</span><span>' + msg + '</span>';
+  c.appendChild(t);
+  setTimeout(function() {
+    t.classList.add('out');
+    setTimeout(function() { t.remove(); }, 300);
+  }, 2500);
+}
+
+// ── TASKS (with localStorage) ──
+var DEFAULT_TASKS = [
+  {text:'Submit CEP monthly progress report', pri:'HIGH', done:false},
+  {text:'Reply to AGOC meeting confirmation', pri:'HIGH', done:false},
+  {text:'Review ESG Framework v3 document', pri:'MED', done:false},
+  {text:'Update GreenCore Supply CRM entries', pri:'LOW', done:false},
+  {text:'Prepare York Street investor memo', pri:'MED', done:false}
+];
+
+var tasks = lsGet('cmddash_tasks', DEFAULT_TASKS);
+
+function saveTasks() { lsSet('cmddash_tasks', tasks); }
+
+function getOpenCount() { return tasks.filter(function(t) { return !t.done; }).length; }
+
+function updateTaskCounts() {
+  var n = getOpenCount();
+  var badge = document.getElementById('taskBadge');
+  var sub = document.getElementById('taskSubtitle');
+  var ov = document.getElementById('ovTaskCount');
+  if (badge) badge.textContent = n;
+  if (sub) sub.textContent = n + ' open task' + (n !== 1 ? 's' : '');
+  if (ov) ov.textContent = n;
+}
+
+function renderTasks() {
+  var highList = document.getElementById('taskList');
+  var medList = document.getElementById('taskListMed');
+  if (!highList || !medList) return;
+  highList.innerHTML = '';
+  medList.innerHTML = '';
+  tasks.forEach(function(task, idx) {
+    var div = document.createElement('div');
+    div.className = 'task-item';
+    div.setAttribute('onclick', 'toggleTaskIdx(' + idx + ')');
+    var priClass = task.pri === 'HIGH' ? 'pri-high' : task.pri === 'MED' ? 'pri-med' : 'pri-low';
+    div.innerHTML = '<div class="task-check' + (task.done ? ' done' : '') + '"></div>' +
+      '<div class="task-text' + (task.done ? ' done' : '') + '">' + escHtml(task.text) + '</div>' +
+      '<span class="task-pri ' + priClass + '">' + task.pri + '</span>';
+    if (task.pri === 'HIGH') highList.appendChild(div);
+    else medList.appendChild(div);
+  });
+  updateTaskCounts();
+}
+
+function toggleTaskIdx(idx) {
+  if (!tasks[idx]) return;
+  tasks[idx].done = !tasks[idx].done;
+  saveTasks();
+  renderTasks();
+  if (tasks[idx].done) showToast('✓', 'Task completed');
+}
+
+// legacy compatibility
+function toggleTask(item) {
+  var check = item.querySelector('.task-check');
+  var done = check.classList.toggle('done');
+  item.querySelector('.task-text').classList.toggle('done', done);
+  showToast('✓', 'Task completed');
+}
+
+function addTask(e) {
+  if (e.key !== 'Enter') return;
+  var input = document.getElementById('newTaskInput');
+  var val = input.value.trim();
+  if (!val) return;
+  tasks.push({text: val, pri: 'LOW', done: false});
+  saveTasks();
+  renderTasks();
+  input.value = '';
+  showToast('📋', 'Task added');
+}
+
+renderTasks();
+
+// ── CALENDAR ──
+var calYear = new Date().getFullYear();
+var calMonth = new Date().getMonth();
+var eventDays = [11, 14, 18, 24, 28];
+var monthNames = ['January','February','March','April','May','June','July','August','September','October','November','December'];
+
+function renderCal() {
+  var grid = document.getElementById('calGrid');
+  var lbl = document.getElementById('calMonthLabel');
+  if (!grid || !lbl) return;
+  lbl.textContent = monthNames[calMonth] + ' ' + calYear;
+  grid.innerHTML = '';
+  var first = new Date(calYear, calMonth, 1).getDay();
+  var days = new Date(calYear, calMonth + 1, 0).getDate();
+  var prevDays = new Date(calYear, calMonth, 0).getDate();
+  var today = new Date();
+  for (var i = 0; i < first; i++) {
+    var d = document.createElement('div');
+    d.className = 'cal-day other-month';
+    d.textContent = prevDays - first + 1 + i;
+    grid.appendChild(d);
+  }
+  for (var i = 1; i <= days; i++) {
+    var d = document.createElement('div');
+    d.className = 'cal-day';
+    if (i === today.getDate() && calMonth === today.getMonth() && calYear === today.getFullYear()) d.classList.add('today');
+    if (eventDays.indexOf(i) !== -1) d.classList.add('has-event');
+    d.textContent = i;
+    (function(day) { d.onclick = function() { showToast('📅', monthNames[calMonth] + ' ' + day); }; })(i);
+    grid.appendChild(d);
+  }
+  var remaining = 42 - first - days;
+  for (var i = 1; i <= remaining; i++) {
+    var d = document.createElement('div');
+    d.className = 'cal-day other-month';
+    d.textContent = i;
+    grid.appendChild(d);
+  }
+}
+function changeMonth(dir) {
+  calMonth += dir;
+  if (calMonth > 11) { calMonth = 0; calYear++; }
+  if (calMonth < 0) { calMonth = 11; calYear--; }
+  renderCal();
+}
+renderCal();
+
+// ── SPLASH ──
+(function() {
+  var p = 0;
+  var fill = document.getElementById('splashFill');
+  var lbl = document.getElementById('splashLbl');
+  var sp = document.getElementById('splash');
+  if (!fill || !lbl || !sp) return;
+  var msgs = ['Loading modules...', 'Connecting services...', 'Syncing data...', 'Almost ready...'];
+  function splashStep() {
+    p += 2;
+    fill.style.width = Math.min(p, 100) + '%';
+    var idx = Math.min(Math.floor(p / 25), msgs.length - 1);
+    lbl.textContent = msgs[idx];
+    if (p < 100) {
+      setTimeout(splashStep, 20);
+    } else {
+      lbl.textContent = 'Done ✓';
+      setTimeout(function() { sp.classList.add('hide'); }, 300);
+    }
+  }
+  setTimeout(splashStep, 100);
+})();
+
+// ── SEARCH ──
+var SD = [
+  {i:'💬', bg:'#00e67615', n:'Priya Kumari',    s:'WhatsApp · reschedule', p:'whatsapp',   k:'priya whatsapp reschedule'},
+  {i:'💬', bg:'#00e67615', n:'Team Singapore',   s:'WhatsApp · ESG report', p:'whatsapp',   k:'singapore esg whatsapp team'},
+  {i:'✉',  bg:'#ff174415', n:'Anthropic',        s:'Gmail · API usage',     p:'email',      k:'anthropic api gmail'},
+  {i:'✉',  bg:'#ff174415', n:'Dilshan S.',       s:'Gmail · CEP invoice',   p:'email',      k:'dilshan cep invoice gmail'},
+  {i:'📧', bg:'#3d8eff15', n:'AGOC',             s:'Outlook · monthly',     p:'outlook',    k:'agoc monthly outlook review'},
+  {i:'📅', bg:'#c77dff15', n:'CEP Site Meeting', s:'Calendar · Today 2pm',  p:'calendar',   k:'cep site meeting calendar today'},
+  {i:'✓',  bg:'#ffab0015', n:'Submit CEP report',s:'Tasks · High priority', p:'tasks',      k:'cep report task high'},
+  {i:'📝', bg:'#00e67615', n:'ESG Melbourne',    s:'Notes',                 p:'notes',      k:'esg melbourne note sarah'},
+  {i:'👥', bg:'#c77dff15', n:'Sarah Chen',       s:'Contacts · Nexus Capital',p:'contacts', k:'sarah chen nexus capital'},
+  {i:'🍅', bg:'#ff174415', n:'Focus Timer',      s:'Pomodoro · 25 min',     p:'pomodoro',  k:'pomodoro focus timer session'},
+  {i:'⚡', bg:'#3d8eff15', n:'Integrations',     s:'Zoom · Teams · Office', p:'connections',k:'zoom teams office slack integration'},
+  {i:'📁', bg:'#ffb30015', n:'Documents',        s:'24 files',              p:'documents',  k:'document file pdf doc'}
+];
+
+function openSearch() {
+  document.getElementById('gsearch').classList.add('open');
+  renderDefSearch();
+  setTimeout(function() {
+    var inp = document.getElementById('gsInput');
+    if (inp) inp.focus();
+  }, 100);
+}
+function closeSearch() {
+  document.getElementById('gsearch').classList.remove('open');
+  var inp = document.getElementById('gsInput');
+  if (inp) inp.value = '';
+}
+function doSearch(q) {
+  var r = document.getElementById('gsResults');
+  if (!r) return;
+  if (!q || !q.trim()) { renderDefSearch(); return; }
+  var ql = q.toLowerCase().trim();
+  // also search tasks
+  var taskHits = tasks.filter(function(t) { return t.text.toLowerCase().indexOf(ql) !== -1; });
+  var hits = SD.filter(function(d) { return d.k.indexOf(ql) !== -1 || d.n.toLowerCase().indexOf(ql) !== -1 || d.s.toLowerCase().indexOf(ql) !== -1; });
+  var q2 = String.fromCharCode(39);
+  var html = '';
+  if (taskHits.length) {
+    html += '<div class="gsr-sec">Tasks</div>';
+    taskHits.slice(0,3).forEach(function(t) {
+      html += '<div class="gsr-item" onclick="switchPanel(' + q2 + 'tasks' + q2 + ',null);closeSearch()">';
+      html += '<div class="gsr-icon" style="background:#ffab0015">✓</div>';
+      html += '<div><div class="gsr-name">' + escHtml(t.text) + '</div><div class="gsr-sub">' + (t.done ? 'Completed' : 'Open · ' + t.pri) + '</div></div></div>';
+    });
+  }
+  if (hits.length) {
+    html += '<div class="gsr-sec">Panels</div>';
+    hits.forEach(function(h) {
+      html += '<div class="gsr-item" onclick="switchPanel(' + q2 + h.p + q2 + ',null);closeSearch()">';
+      html += '<div class="gsr-icon" style="background:' + h.bg + '">' + h.i + '</div>';
+      html += '<div><div class="gsr-name">' + h.n + '</div><div class="gsr-sub">' + h.s + '</div></div></div>';
+    });
+  }
+  if (!html) {
+    r.innerHTML = '<div style="padding:28px;text-align:center;color:var(--text-muted);font-size:13px">No results for <strong>' + escHtml(q) + '</strong></div>';
+    return;
+  }
+  r.innerHTML = html;
+}
+function renderDefSearch() {
+  var r = document.getElementById('gsResults');
+  if (!r) return;
+  var items = [
+    {p:'whatsapp', bg:'#00e67615', i:'💬', n:'Open WhatsApp',    s:'5 unread'},
+    {p:'email',    bg:'#ff174415', i:'✉',  n:'Open Gmail',       s:'12 unread'},
+    {p:'tasks',    bg:'#ffab0015', i:'✓',  n:'Open Tasks',       s: getOpenCount() + ' open'},
+    {p:'notes',    bg:'#00e67615', i:'📝', n:'Quick Notes',      s:''},
+    {p:'pomodoro', bg:'#ff174415', i:'🍅', n:'Start Focus Timer',s:''}
+  ];
+  var q2 = String.fromCharCode(39);
+  var html = '<div class="gsr-sec">Quick Actions</div>';
+  items.forEach(function(h) {
+    html += '<div class="gsr-item" onclick="switchPanel(' + q2 + h.p + q2 + ',null);closeSearch()">';
+    html += '<div class="gsr-icon" style="background:' + h.bg + '">' + h.i + '</div>';
+    html += '<div><div class="gsr-name">' + h.n + '</div>';
+    if (h.s) html += '<div class="gsr-sub">' + h.s + '</div>';
+    html += '</div></div>';
+  });
+  r.innerHTML = html;
+}
+document.addEventListener('keydown', function(e) {
+  if ((e.key === '/' || (e.ctrlKey && e.key === 'k')) && document.activeElement.tagName !== 'INPUT' && document.activeElement.tagName !== 'TEXTAREA') {
+    e.preventDefault();
+    openSearch();
+  }
+  if (e.key === 'Escape') { closeSearch(); closeNote(); }
+});
+
+// ── NOTES (with localStorage) ──
+var DEFAULT_NOTES = [
+  {title:'CEP Site — KM 42 Observations', body:'Drainage repair at KM 42 progressing. Contractor behind schedule by ~3 days. Need to flag to AGOC in next IPC submission.', tag:'CEP', tagBg:'#3d8eff15', tagColor:'var(--accent-blue)', color:'nc-blue', date:'Today 08:30'},
+  {title:'ESG Outreach — Melbourne Lead', body:'Contact: Sarah Chen at Nexus Capital. Interested in CSRD compliance support. Follow up by Thursday with capability deck.', tag:'ESG', tagBg:'#00e67615', tagColor:'var(--accent-green)', color:'nc-green', date:'Yesterday'},
+  {title:'York Street — JV Notes', body:'Luxury boutique hotel route still highest IRR. Need to shortlist 3 international architects for LEED Platinum positioning.', tag:'REALTY', tagBg:'#ffb30015', tagColor:'var(--accent-amber)', color:'nc-amber', date:'Monday'},
+  {title:'SaaS Product — F&B Module', body:'Core features: recipe costing, menu engineering, supplier integration. Target: mid-market restaurants in Colombo. MVP timeline 3 months.', tag:'SAAS', tagBg:'#c77dff15', tagColor:'var(--accent-purple)', color:'nc-purple', date:'Last week'},
+  {title:'Porsche Macan S — Service Due', body:'Next service at 60,000 km. Book with Euro Motors Colombo. Also check tyre pressure — front-left reading low last check.', tag:'PERSONAL', tagBg:'#ff3d7115', tagColor:'var(--accent-red)', color:'nc-red', date:'Last week'}
+];
+
+var notes = lsGet('cmddash_notes', DEFAULT_NOTES);
+var curNoteIdx = -1;
+
+function saveNotes() { lsSet('cmddash_notes', notes); }
+
+function renderNotes() {
+  var grid = document.getElementById('notesGrid');
+  if (!grid) return;
+  grid.innerHTML = '';
+  notes.forEach(function(note, idx) {
+    var card = document.createElement('div');
+    card.className = 'note-card ' + note.color;
+    card.setAttribute('onclick', 'openNoteIdx(' + idx + ')');
+    card.innerHTML = '<div class="note-title">' + escHtml(note.title) + '</div>' +
+      '<div class="note-body">' + escHtml(note.body) + '</div>' +
+      '<div class="note-footer">' +
+      '<div class="note-date">' + note.date + '</div>' +
+      '<span class="note-tag" style="background:' + note.tagBg + ';color:' + note.tagColor + '">' + note.tag + '</span>' +
+      '</div>';
+    grid.appendChild(card);
+  });
+  var add = document.createElement('div');
+  add.className = 'add-note-card';
+  add.setAttribute('onclick', 'openNoteIdx(-1)');
+  add.innerHTML = '<div style="font-size:24px">+</div><div>New Note</div>';
+  grid.appendChild(add);
+}
+
+function openNoteIdx(idx) {
+  curNoteIdx = idx;
+  var note = idx >= 0 ? notes[idx] : null;
+  document.getElementById('nmTitle').value = note ? note.title : '';
+  document.getElementById('nmBody').value = note ? note.body : '';
+  document.getElementById('nmodal').classList.add('open');
+  setTimeout(function() { document.getElementById('nmTitle').focus(); }, 150);
+}
+
+// legacy
+function openNote(card) { openNoteIdx(-1); }
+
+function closeNote() {
+  document.getElementById('nmodal').classList.remove('open');
+}
+
+function saveNote() {
+  var t = document.getElementById('nmTitle').value.trim();
+  var b = document.getElementById('nmBody').value.trim();
+  if (!t) { showToast('⚠', 'Please add a title'); return; }
+  var cols = [{c:'nc-blue',bg:'#3d8eff15',color:'var(--accent-blue)',tag:'NOTE'},{c:'nc-green',bg:'#00e67615',color:'var(--accent-green)',tag:'NOTE'},{c:'nc-amber',bg:'#ffb30015',color:'var(--accent-amber)',tag:'NOTE'},{c:'nc-purple',bg:'#c77dff15',color:'var(--accent-purple)',tag:'NOTE'},{c:'nc-red',bg:'#ff3d7115',color:'var(--accent-red)',tag:'NOTE'}];
+  var now = new Date();
+  var dateStr = 'Today ' + (now.getHours() < 10 ? '0' : '') + now.getHours() + ':' + (now.getMinutes() < 10 ? '0' : '') + now.getMinutes();
+  if (curNoteIdx >= 0 && notes[curNoteIdx]) {
+    notes[curNoteIdx].title = t;
+    notes[curNoteIdx].body = b;
+    notes[curNoteIdx].date = dateStr;
+  } else {
+    var c = cols[notes.length % cols.length];
+    notes.unshift({title:t, body:b, tag:c.tag, tagBg:c.bg, tagColor:c.color, color:c.c, date:dateStr});
+  }
+  saveNotes();
+  renderNotes();
+  closeNote();
+  showToast('📝', curNoteIdx >= 0 ? 'Note updated' : 'Note saved');
+}
+
+function deleteNote() {
+  if (curNoteIdx < 0 || !notes[curNoteIdx]) { closeNote(); return; }
+  notes.splice(curNoteIdx, 1);
+  saveNotes();
+  renderNotes();
+  closeNote();
+  showToast('🗑', 'Note deleted');
+}
+
+renderNotes();
+
+// ── HTML ESCAPE ──
+function escHtml(s) {
+  return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+// ── CONNECTIONS ──
+function toggleConn(btn, name) {
+  var card = btn.closest('.cconn');
+  var connected = card.classList.contains('connected');
+  var dot  = card.querySelector('.csdot');
+  var span = card.querySelector('.cconn-status span');
+  if (connected) {
+    card.classList.remove('connected');
+    dot.className = 'csdot csoff';
+    span.style.color = 'var(--text-muted)';
+    span.textContent = 'Not connected';
+    btn.className = 'cbtn conn';
+    btn.textContent = 'Connect';
+    showToast('🔌', name + ' disconnected');
+  } else {
+    card.classList.add('connected');
+    dot.className = 'csdot cson';
+    span.style.color = 'var(--accent-green)';
+    span.textContent = 'Connected';
+    btn.className = 'cbtn disc';
+    btn.textContent = 'Disconnect';
+    showToast('⚡', name + ' connected');
+  }
+}
+
+// ── POMODORO ──
+var pRun = false, pSec = 25*60, pTotal = 25*60, pMode = 'focus', pIv = null, pDone = 0;
+var pomCircle = document.getElementById('pomC');
+var CIRC = 596.9;
+function setPomMode(mode, mins, el) {
+  if (pRun) return;
+  pMode = mode; pSec = mins * 60; pTotal = mins * 60;
+  document.querySelectorAll('.pmb').forEach(function(b) { b.classList.remove('active'); });
+  el.classList.add('active');
+  var cols = {focus:'var(--accent-red)', short:'var(--accent-green)', long:'var(--accent-blue)'};
+  if (pomCircle) pomCircle.style.stroke = cols[mode];
+  var lbl = document.getElementById('pomLbl');
+  if (lbl) lbl.textContent = mode.toUpperCase();
+  updPom();
+}
+function updPom() {
+  var m = Math.floor(pSec / 60), s = pSec % 60;
+  var tEl = document.getElementById('pomTime');
+  if (tEl) tEl.textContent = (m < 10 ? '0' : '') + m + ':' + (s < 10 ? '0' : '') + s;
+  if (pomCircle) pomCircle.style.strokeDashoffset = CIRC * (1 - pSec / pTotal);
+}
+function togglePom() {
+  var btn = document.getElementById('pomBtn');
+  if (pRun) {
+    clearInterval(pIv); pRun = false;
+    if (btn) btn.textContent = '▶ Resume';
+  } else {
+    pRun = true;
+    if (btn) btn.textContent = '⏸ Pause';
+    pIv = setInterval(function() {
+      if (pSec <= 0) {
+        clearInterval(pIv); pRun = false; pDone++;
+        var dots = document.querySelectorAll('.psdot');
+        if (pDone <= 4 && dots[pDone-1]) dots[pDone-1].classList.add('done');
+        if (btn) btn.textContent = '▶ Start';
+        addPomLog(pMode);
+        showToast('🍅', pMode === 'focus' ? 'Session complete! Take a break.' : 'Break over!');
+        return;
+      }
+      pSec--;
+      updPom();
+    }, 1000);
+  }
+}
+function resetPom() {
+  clearInterval(pIv); pRun = false; pSec = pTotal;
+  var btn = document.getElementById('pomBtn');
+  if (btn) btn.textContent = '▶ Start';
+  updPom();
+}
+function addPomLog(mode) {
+  var log = document.getElementById('pomLog');
+  var empty = document.getElementById('pomEmpty');
+  if (!log) return;
+  if (empty) empty.remove();
+  var now = new Date();
+  var item = document.createElement('div');
+  item.style.cssText = 'display:flex;align-items:center;gap:10px;padding:9px 12px;border-radius:9px;background:var(--surface2);border:1px solid var(--border);margin-bottom:6px;font-size:12px';
+  var icon = mode === 'focus' ? '🍅' : mode === 'short' ? '☕' : '🌿';
+  var label = mode === 'focus' ? 'Focus session' : 'Break';
+  var time = now.toLocaleTimeString('en-GB', {hour12:false, hour:'2-digit', minute:'2-digit'});
+  item.innerHTML = '<span style="font-size:14px">' + icon + '</span><span style="flex:1;font-weight:600">' + label + ' completed</span><span style="font-family:monospace;font-size:10px;color:var(--text-muted)">' + time + '</span>';
+  log.appendChild(item);
+}
+updPom();
+
+// ── DRAG WIDGETS ──
+var dragSrc = null;
+document.querySelectorAll('.ov-card[draggable]').forEach(function(w) {
+  var h = document.createElement('div');
+  h.className = 'wdh'; h.textContent = '⠿'; h.title = 'Drag to reorder';
+  w.appendChild(h);
+  w.addEventListener('dragstart', function(e) { dragSrc = w; w.classList.add('dragging'); e.dataTransfer.effectAllowed = 'move'; });
+  w.addEventListener('dragend',   function()  { w.classList.remove('dragging'); document.querySelectorAll('.ov-card').forEach(function(x) { x.classList.remove('drag-over'); }); });
+  w.addEventListener('dragover',  function(e) { e.preventDefault(); if (w !== dragSrc) w.classList.add('drag-over'); });
+  w.addEventListener('dragleave', function()  { w.classList.remove('drag-over'); });
+  w.addEventListener('drop', function(e) {
+    e.preventDefault(); w.classList.remove('drag-over');
+    if (dragSrc && dragSrc !== w) {
+      var g = dragSrc.parentElement;
+      var kids = Array.prototype.slice.call(g.children);
+      var si = kids.indexOf(dragSrc), ti = kids.indexOf(w);
+      if (si < ti) g.insertBefore(dragSrc, w.nextSibling); else g.insertBefore(dragSrc, w);
+      showToast('⠿', 'Widgets reordered');
+    }
+  });
+});
+</script>
+</body>
+</html>
