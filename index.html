@@ -594,7 +594,7 @@ body {
   <div class="nmodal-box">
     <div class="nm-top"><div class="nm-title">Edit Note</div><button class="nm-close" onclick="closeNote()">✕</button></div>
     <div class="nm-body"><input class="nm-inp" id="nmTitle" placeholder="Note title..."><textarea class="nm-ta" id="nmBody" placeholder="Write your note..."></textarea></div>
-    <div class="nm-foot"><button class="compose-btn" style="background:var(--surface2);color:var(--text);border:1px solid var(--border)" onclick="closeNote()">Cancel</button><button class="compose-btn" onclick="saveNote()">Save Note</button></div>
+    <div class="nm-foot"><button class="compose-btn" style="background:var(--surface2);color:var(--text);border:1px solid var(--border)" onclick="closeNote()">Cancel</button><button class="compose-btn" style="background:#ff3d7115;color:var(--accent-red);border:1px solid #ff3d7130" onclick="deleteNote()">Delete</button><button class="compose-btn" onclick="saveNote()">Save Note</button></div>
   </div>
 </div>
 
@@ -872,16 +872,9 @@ body {
         <button class="btn btn-blue" onclick="document.getElementById('newTaskInput').focus()">+ Add Task</button>
       </div>
       <div class="section-title">High Priority</div>
-      <div id="taskList">
-        <div class="task-item" onclick="toggleTask(this)"><div class="task-check"></div><div class="task-text">Submit CEP monthly progress report</div><span class="task-pri pri-high">HIGH</span></div>
-        <div class="task-item" onclick="toggleTask(this)"><div class="task-check"></div><div class="task-text">Reply to AGOC meeting confirmation</div><span class="task-pri pri-high">HIGH</span></div>
-      </div>
+      <div id="taskList"></div>
       <div class="section-title">This Week</div>
-      <div id="taskListMed">
-        <div class="task-item" onclick="toggleTask(this)"><div class="task-check"></div><div class="task-text">Review ESG Framework v3 document</div><span class="task-pri pri-med">MED</span></div>
-        <div class="task-item" onclick="toggleTask(this)"><div class="task-check"></div><div class="task-text">Update GreenCore Supply CRM entries</div><span class="task-pri pri-low">LOW</span></div>
-        <div class="task-item" onclick="toggleTask(this)"><div class="task-check"></div><div class="task-text">Prepare York Street investor memo</div><span class="task-pri pri-med">MED</span></div>
-      </div>
+      <div id="taskListMed"></div>
       <div class="add-task-row">
         <input class="add-task-input" id="newTaskInput" placeholder="Add a new task and press Enter..." onkeydown="addTask(event)">
         <button class="btn btn-blue" onclick="addTask({key:'Enter'})">Add</button>
@@ -893,37 +886,7 @@ body {
       <div class="panel-header">
         <div><div class="panel-title">Quick Notes</div><div class="panel-subtitle">6 notes</div></div>
       </div>
-      <div class="notes-grid" id="notesGrid">
-        <div class="note-card nc-blue" onclick="openNote(this)">
-          <div class="note-title">CEP Site — KM 42 Observations</div>
-          <div class="note-body">Drainage repair at KM 42 progressing. Contractor behind schedule by ~3 days. Need to flag to AGOC in next IPC submission.</div>
-          <div class="note-footer"><div class="note-date">Today 08:30</div><span class="note-tag" style="background:#3d8eff15;color:var(--accent-blue)">CEP</span></div>
-        </div>
-        <div class="note-card nc-green" onclick="openNote(this)">
-          <div class="note-title">ESG Outreach — Melbourne Lead</div>
-          <div class="note-body">Contact: Sarah Chen at Nexus Capital. Interested in CSRD compliance support. Follow up by Thursday with capability deck.</div>
-          <div class="note-footer"><div class="note-date">Yesterday</div><span class="note-tag" style="background:#00e67615;color:var(--accent-green)">ESG</span></div>
-        </div>
-        <div class="note-card nc-amber" onclick="openNote(this)">
-          <div class="note-title">York Street — JV Notes</div>
-          <div class="note-body">Luxury boutique hotel route still highest IRR. Need to shortlist 3 international architects for LEED Platinum positioning. Budget ~$2M fit-out.</div>
-          <div class="note-footer"><div class="note-date">Monday</div><span class="note-tag" style="background:#ffb30015;color:var(--accent-amber)">REALTY</span></div>
-        </div>
-        <div class="note-card nc-purple" onclick="openNote(this)">
-          <div class="note-title">SaaS Product — F&B Module</div>
-          <div class="note-body">Core features: recipe costing, menu engineering, supplier integration. Target: mid-market restaurants in Colombo. MVP timeline 3 months.</div>
-          <div class="note-footer"><div class="note-date">Last week</div><span class="note-tag" style="background:#c77dff15;color:var(--accent-purple)">SAAS</span></div>
-        </div>
-        <div class="note-card nc-red" onclick="openNote(this)">
-          <div class="note-title">Porsche Macan S — Service Due</div>
-          <div class="note-body">Next service at 60,000 km. Book with Euro Motors Colombo. Also check tyre pressure — front-left reading low last check.</div>
-          <div class="note-footer"><div class="note-date">Last week</div><span class="note-tag" style="background:#ff3d7115;color:var(--accent-red)">PERSONAL</span></div>
-        </div>
-        <div class="add-note-card" onclick="openNote(null)">
-          <div style="font-size:24px">+</div>
-          <div>New Note</div>
-        </div>
-      </div>
+      <div class="notes-grid" id="notesGrid"></div>
     </div>
 
     <!-- DOCUMENTS -->
@@ -1027,28 +990,41 @@ body {
 <div class="toast-container" id="toastContainer"></div>
 
 <script>
-// CLOCK
+// ── STORAGE HELPERS ──
+function lsGet(k, def) { try { var v = localStorage.getItem(k); return v !== null ? JSON.parse(v) : def; } catch(e) { return def; } }
+function lsSet(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch(e) {} }
+
+// ── CLOCK ──
 function tick() {
   var clockEl = document.getElementById('clock');
   var dateEl = document.getElementById('dateDisplay');
   var now = new Date();
+  var h = now.getHours();
+  var greeting = h < 12 ? 'Good morning' : h < 17 ? 'Good afternoon' : 'Good evening';
+  var greetEl = document.querySelector('#panel-overview .panel-title');
+  if (greetEl && !greetEl.dataset.custom) greetEl.textContent = greeting + ' ✦';
   if (clockEl) clockEl.textContent = now.toLocaleTimeString('en-GB', {hour12: false});
   if (dateEl) dateEl.textContent = now.toLocaleDateString('en-GB', {weekday:'long', day:'numeric', month:'long', year:'numeric'});
 }
 tick();
 setInterval(tick, 1000);
 
-// THEME
-var isDark = true;
-function toggleTheme() {
-  isDark = !isDark;
+// ── THEME ──
+var isDark = lsGet('theme', 'dark') === 'dark';
+function applyTheme() {
   document.documentElement.setAttribute('data-theme', isDark ? 'dark' : 'light');
   var btn = document.getElementById('themeBtn');
   if (btn) btn.textContent = isDark ? '🌙' : '☀️';
+}
+applyTheme();
+function toggleTheme() {
+  isDark = !isDark;
+  lsSet('theme', isDark ? 'dark' : 'light');
+  applyTheme();
   showToast(isDark ? '🌙' : '☀️', isDark ? 'Dark mode' : 'Light mode');
 }
 
-// SIDEBAR
+// ── SIDEBAR ──
 function toggleSidebar() {
   var s = document.getElementById('sidebar');
   var h = document.getElementById('hamburger');
@@ -1063,7 +1039,15 @@ function closeSidebar() {
   document.getElementById('overlay').classList.remove('active');
 }
 
-// PANELS
+// ── SWIPE TO CLOSE SIDEBAR ──
+var tsX = 0;
+document.addEventListener('touchstart', function(e) { tsX = e.touches[0].clientX; }, {passive:true});
+document.addEventListener('touchend', function(e) {
+  var dx = e.changedTouches[0].clientX - tsX;
+  if (dx < -60 && document.getElementById('sidebar').classList.contains('open')) closeSidebar();
+}, {passive:true});
+
+// ── PANELS ──
 function switchPanel(name, navEl) {
   document.querySelectorAll('.panel').forEach(function(p) { p.classList.remove('active'); });
   var panel = document.getElementById('panel-' + name);
@@ -1076,15 +1060,16 @@ function switchPanel(name, navEl) {
   if (navEl) {
     navEl.classList.add('active');
   } else {
+    var q = String.fromCharCode(39);
     document.querySelectorAll('.nav-item').forEach(function(n) {
       var oc = n.getAttribute('onclick') || '';
-      if (oc.indexOf("'" + name + "'") !== -1) n.classList.add('active');
+      if (oc.indexOf(q + name + q) !== -1) n.classList.add('active');
     });
   }
   closeSidebar();
 }
 
-// NOTIFICATIONS
+// ── NOTIFICATIONS ──
 var notifOpen = false;
 function toggleNotif() {
   notifOpen = !notifOpen;
@@ -1104,7 +1089,7 @@ document.addEventListener('click', function(e) {
   }
 });
 
-// TOAST
+// ── TOAST ──
 function showToast(icon, msg) {
   var c = document.getElementById('toastContainer');
   var t = document.createElement('div');
@@ -1117,44 +1102,87 @@ function showToast(icon, msg) {
   }, 2500);
 }
 
-// TASKS
-var openTasks = 3;
+// ── TASKS (with localStorage) ──
+var DEFAULT_TASKS = [
+  {text:'Submit CEP monthly progress report', pri:'HIGH', done:false},
+  {text:'Reply to AGOC meeting confirmation', pri:'HIGH', done:false},
+  {text:'Review ESG Framework v3 document', pri:'MED', done:false},
+  {text:'Update GreenCore Supply CRM entries', pri:'LOW', done:false},
+  {text:'Prepare York Street investor memo', pri:'MED', done:false}
+];
+
+var tasks = lsGet('cmddash_tasks', DEFAULT_TASKS);
+
+function saveTasks() { lsSet('cmddash_tasks', tasks); }
+
+function getOpenCount() { return tasks.filter(function(t) { return !t.done; }).length; }
+
+function updateTaskCounts() {
+  var n = getOpenCount();
+  var badge = document.getElementById('taskBadge');
+  var sub = document.getElementById('taskSubtitle');
+  var ov = document.getElementById('ovTaskCount');
+  if (badge) badge.textContent = n;
+  if (sub) sub.textContent = n + ' open task' + (n !== 1 ? 's' : '');
+  if (ov) ov.textContent = n;
+}
+
+function renderTasks() {
+  var highList = document.getElementById('taskList');
+  var medList = document.getElementById('taskListMed');
+  if (!highList || !medList) return;
+  highList.innerHTML = '';
+  medList.innerHTML = '';
+  tasks.forEach(function(task, idx) {
+    var div = document.createElement('div');
+    div.className = 'task-item';
+    div.setAttribute('onclick', 'toggleTaskIdx(' + idx + ')');
+    var priClass = task.pri === 'HIGH' ? 'pri-high' : task.pri === 'MED' ? 'pri-med' : 'pri-low';
+    div.innerHTML = '<div class="task-check' + (task.done ? ' done' : '') + '"></div>' +
+      '<div class="task-text' + (task.done ? ' done' : '') + '">' + escHtml(task.text) + '</div>' +
+      '<span class="task-pri ' + priClass + '">' + task.pri + '</span>';
+    if (task.pri === 'HIGH') highList.appendChild(div);
+    else medList.appendChild(div);
+  });
+  updateTaskCounts();
+}
+
+function toggleTaskIdx(idx) {
+  if (!tasks[idx]) return;
+  tasks[idx].done = !tasks[idx].done;
+  saveTasks();
+  renderTasks();
+  if (tasks[idx].done) showToast('✓', 'Task completed');
+}
+
+// legacy compatibility
 function toggleTask(item) {
   var check = item.querySelector('.task-check');
-  var text = item.querySelector('.task-text');
   var done = check.classList.toggle('done');
-  text.classList.toggle('done', done);
-  openTasks += done ? -1 : 1;
-  var t = Math.max(0, openTasks);
-  document.getElementById('taskBadge').textContent = t;
-  document.getElementById('taskSubtitle').textContent = t + ' open tasks';
-  var ovEl = document.getElementById('ovTaskCount');
-  if (ovEl) ovEl.textContent = t;
-  if (done) showToast('✓', 'Task completed');
+  item.querySelector('.task-text').classList.toggle('done', done);
+  showToast('✓', 'Task completed');
 }
+
 function addTask(e) {
   if (e.key !== 'Enter') return;
   var input = document.getElementById('newTaskInput');
   var val = input.value.trim();
   if (!val) return;
-  var div = document.createElement('div');
-  div.className = 'task-item';
-  div.setAttribute('onclick', 'toggleTask(this)');
-  div.innerHTML = '<div class="task-check"></div><div class="task-text">' + val + '</div><span class="task-pri pri-low">LOW</span>';
-  document.getElementById('taskListMed').appendChild(div);
+  tasks.push({text: val, pri: 'LOW', done: false});
+  saveTasks();
+  renderTasks();
   input.value = '';
-  openTasks++;
-  document.getElementById('taskBadge').textContent = openTasks;
-  document.getElementById('taskSubtitle').textContent = openTasks + ' open tasks';
-  var ovEl = document.getElementById('ovTaskCount');
-  if (ovEl) ovEl.textContent = openTasks;
   showToast('📋', 'Task added');
 }
 
-// CALENDAR
-var calYear = 2026, calMonth = 2;
+renderTasks();
+
+// ── CALENDAR ──
+var calYear = new Date().getFullYear();
+var calMonth = new Date().getMonth();
 var eventDays = [11, 14, 18, 24, 28];
 var monthNames = ['January','February','March','April','May','June','July','August','September','October','November','December'];
+
 function renderCal() {
   var grid = document.getElementById('calGrid');
   var lbl = document.getElementById('calMonthLabel');
@@ -1196,68 +1224,88 @@ function changeMonth(dir) {
 }
 renderCal();
 
-// SPLASH
+// ── SPLASH ──
 (function() {
   var p = 0;
   var fill = document.getElementById('splashFill');
   var lbl = document.getElementById('splashLbl');
-  var msgs = ['Loading modules...', 'Connecting services...', 'Syncing data...', 'Almost ready...', 'Done'];
-  if (!fill || !lbl) return;
+  var sp = document.getElementById('splash');
+  if (!fill || !lbl || !sp) return;
+  var msgs = ['Loading modules...', 'Connecting services...', 'Syncing data...', 'Almost ready...'];
   function splashStep() {
-    if (p >= 100) {
-      var sp = document.getElementById('splash');
-      if (sp) sp.classList.add('hide');
-      return;
-    }
     p += 2;
-    fill.style.width = p + '%';
-    var step = Math.floor(p / 25);
-    if (p % 25 === 0 && msgs[step - 1]) lbl.textContent = msgs[step - 1];
-    setTimeout(splashStep, 25);
+    fill.style.width = Math.min(p, 100) + '%';
+    var idx = Math.min(Math.floor(p / 25), msgs.length - 1);
+    lbl.textContent = msgs[idx];
+    if (p < 100) {
+      setTimeout(splashStep, 20);
+    } else {
+      lbl.textContent = 'Done ✓';
+      setTimeout(function() { sp.classList.add('hide'); }, 300);
+    }
   }
-  splashStep();
+  setTimeout(splashStep, 100);
 })();
 
-// SEARCH
+// ── SEARCH ──
 var SD = [
-  {i:'💬', bg:'#00e67615', n:'Priya Kumari',    s:'WhatsApp',              p:'whatsapp',   k:'priya whatsapp reschedule'},
-  {i:'💬', bg:'#00e67615', n:'Team Singapore',   s:'WhatsApp - ESG report', p:'whatsapp',   k:'singapore esg whatsapp'},
-  {i:'✉',  bg:'#ff174415', n:'Anthropic',        s:'Gmail - API usage',     p:'email',      k:'anthropic api gmail'},
-  {i:'✉',  bg:'#ff174415', n:'Dilshan S.',       s:'Gmail - CEP invoice',   p:'email',      k:'dilshan cep invoice'},
-  {i:'📧', bg:'#3d8eff15', n:'AGOC',             s:'Outlook - monthly',     p:'outlook',    k:'agoc monthly outlook'},
-  {i:'📅', bg:'#c77dff15', n:'CEP Site Meeting', s:'Calendar - Today',      p:'calendar',   k:'cep site meeting calendar'},
-  {i:'✓',  bg:'#ffab0015', n:'Submit CEP report',s:'Tasks - High priority', p:'tasks',      k:'cep report task'},
-  {i:'📝', bg:'#00e67615', n:'ESG Melbourne',    s:'Notes',                 p:'notes',      k:'esg melbourne note'},
-  {i:'👥', bg:'#c77dff15', n:'Sarah Chen',       s:'Contacts',              p:'contacts',   k:'sarah chen nexus'},
-  {i:'🍅', bg:'#ff174415', n:'Focus Timer',      s:'Pomodoro',              p:'pomodoro',   k:'pomodoro focus timer'},
-  {i:'⚡', bg:'#3d8eff15', n:'Integrations',     s:'Zoom Teams Office',     p:'connections',k:'zoom teams office'}
+  {i:'💬', bg:'#00e67615', n:'Priya Kumari',    s:'WhatsApp · reschedule', p:'whatsapp',   k:'priya whatsapp reschedule'},
+  {i:'💬', bg:'#00e67615', n:'Team Singapore',   s:'WhatsApp · ESG report', p:'whatsapp',   k:'singapore esg whatsapp team'},
+  {i:'✉',  bg:'#ff174415', n:'Anthropic',        s:'Gmail · API usage',     p:'email',      k:'anthropic api gmail'},
+  {i:'✉',  bg:'#ff174415', n:'Dilshan S.',       s:'Gmail · CEP invoice',   p:'email',      k:'dilshan cep invoice gmail'},
+  {i:'📧', bg:'#3d8eff15', n:'AGOC',             s:'Outlook · monthly',     p:'outlook',    k:'agoc monthly outlook review'},
+  {i:'📅', bg:'#c77dff15', n:'CEP Site Meeting', s:'Calendar · Today 2pm',  p:'calendar',   k:'cep site meeting calendar today'},
+  {i:'✓',  bg:'#ffab0015', n:'Submit CEP report',s:'Tasks · High priority', p:'tasks',      k:'cep report task high'},
+  {i:'📝', bg:'#00e67615', n:'ESG Melbourne',    s:'Notes',                 p:'notes',      k:'esg melbourne note sarah'},
+  {i:'👥', bg:'#c77dff15', n:'Sarah Chen',       s:'Contacts · Nexus Capital',p:'contacts', k:'sarah chen nexus capital'},
+  {i:'🍅', bg:'#ff174415', n:'Focus Timer',      s:'Pomodoro · 25 min',     p:'pomodoro',  k:'pomodoro focus timer session'},
+  {i:'⚡', bg:'#3d8eff15', n:'Integrations',     s:'Zoom · Teams · Office', p:'connections',k:'zoom teams office slack integration'},
+  {i:'📁', bg:'#ffb30015', n:'Documents',        s:'24 files',              p:'documents',  k:'document file pdf doc'}
 ];
+
 function openSearch() {
   document.getElementById('gsearch').classList.add('open');
   renderDefSearch();
-  setTimeout(function() { document.getElementById('gsInput').focus(); }, 100);
+  setTimeout(function() {
+    var inp = document.getElementById('gsInput');
+    if (inp) inp.focus();
+  }, 100);
 }
 function closeSearch() {
   document.getElementById('gsearch').classList.remove('open');
-  document.getElementById('gsInput').value = '';
+  var inp = document.getElementById('gsInput');
+  if (inp) inp.value = '';
 }
 function doSearch(q) {
   var r = document.getElementById('gsResults');
   if (!r) return;
-  if (!q) { renderDefSearch(); return; }
-  var ql = q.toLowerCase();
-  var hits = SD.filter(function(d) { return d.k.indexOf(ql) !== -1 || d.n.toLowerCase().indexOf(ql) !== -1; });
-  if (!hits.length) {
-    r.innerHTML = '<div style="padding:28px;text-align:center;color:var(--text-muted);font-size:13px">No results</div>';
+  if (!q || !q.trim()) { renderDefSearch(); return; }
+  var ql = q.toLowerCase().trim();
+  // also search tasks
+  var taskHits = tasks.filter(function(t) { return t.text.toLowerCase().indexOf(ql) !== -1; });
+  var hits = SD.filter(function(d) { return d.k.indexOf(ql) !== -1 || d.n.toLowerCase().indexOf(ql) !== -1 || d.s.toLowerCase().indexOf(ql) !== -1; });
+  var q2 = String.fromCharCode(39);
+  var html = '';
+  if (taskHits.length) {
+    html += '<div class="gsr-sec">Tasks</div>';
+    taskHits.slice(0,3).forEach(function(t) {
+      html += '<div class="gsr-item" onclick="switchPanel(' + q2 + 'tasks' + q2 + ',null);closeSearch()">';
+      html += '<div class="gsr-icon" style="background:#ffab0015">✓</div>';
+      html += '<div><div class="gsr-name">' + escHtml(t.text) + '</div><div class="gsr-sub">' + (t.done ? 'Completed' : 'Open · ' + t.pri) + '</div></div></div>';
+    });
+  }
+  if (hits.length) {
+    html += '<div class="gsr-sec">Panels</div>';
+    hits.forEach(function(h) {
+      html += '<div class="gsr-item" onclick="switchPanel(' + q2 + h.p + q2 + ',null);closeSearch()">';
+      html += '<div class="gsr-icon" style="background:' + h.bg + '">' + h.i + '</div>';
+      html += '<div><div class="gsr-name">' + h.n + '</div><div class="gsr-sub">' + h.s + '</div></div></div>';
+    });
+  }
+  if (!html) {
+    r.innerHTML = '<div style="padding:28px;text-align:center;color:var(--text-muted);font-size:13px">No results for <strong>' + escHtml(q) + '</strong></div>';
     return;
   }
-  var q2 = String.fromCharCode(39);
-  var html = '<div class="gsr-sec">Results</div>';
-  hits.forEach(function(h) {
-    html += '<div class="gsr-item" onclick="switchPanel(' + q2 + h.p + q2 + ',null);closeSearch()">';
-    html += '<div class="gsr-icon" style="background:' + h.bg + '">' + h.i + '</div>';
-    html += '<div><div class="gsr-name">' + h.n + '</div><div class="gsr-sub">' + h.s + '</div></div></div>';
-  });
   r.innerHTML = html;
 }
 function renderDefSearch() {
@@ -1266,8 +1314,8 @@ function renderDefSearch() {
   var items = [
     {p:'whatsapp', bg:'#00e67615', i:'💬', n:'Open WhatsApp',    s:'5 unread'},
     {p:'email',    bg:'#ff174415', i:'✉',  n:'Open Gmail',       s:'12 unread'},
-    {p:'outlook',  bg:'#3d8eff15', i:'📧', n:'Open Outlook',     s:'3 pending'},
-    {p:'tasks',    bg:'#ffab0015', i:'✓',  n:'Open Tasks',       s:''},
+    {p:'tasks',    bg:'#ffab0015', i:'✓',  n:'Open Tasks',       s: getOpenCount() + ' open'},
+    {p:'notes',    bg:'#00e67615', i:'📝', n:'Quick Notes',      s:''},
     {p:'pomodoro', bg:'#ff174415', i:'🍅', n:'Start Focus Timer',s:''}
   ];
   var q2 = String.fromCharCode(39);
@@ -1276,60 +1324,110 @@ function renderDefSearch() {
     html += '<div class="gsr-item" onclick="switchPanel(' + q2 + h.p + q2 + ',null);closeSearch()">';
     html += '<div class="gsr-icon" style="background:' + h.bg + '">' + h.i + '</div>';
     html += '<div><div class="gsr-name">' + h.n + '</div>';
-    if (h.s) { html += '<div class="gsr-sub">' + h.s + '</div>'; }
+    if (h.s) html += '<div class="gsr-sub">' + h.s + '</div>';
     html += '</div></div>';
   });
   r.innerHTML = html;
 }
 document.addEventListener('keydown', function(e) {
-  if (e.key === '/' && document.activeElement.tagName !== 'INPUT' && document.activeElement.tagName !== 'TEXTAREA') {
+  if ((e.key === '/' || (e.ctrlKey && e.key === 'k')) && document.activeElement.tagName !== 'INPUT' && document.activeElement.tagName !== 'TEXTAREA') {
     e.preventDefault();
     openSearch();
   }
-  if (e.key === 'Escape') closeSearch();
+  if (e.key === 'Escape') { closeSearch(); closeNote(); }
 });
 
-// NOTE EDITOR
-var curNote = null;
-function openNote(card) {
-  curNote = card;
-  var titleEl = card ? card.querySelector('.note-title') : null;
-  var bodyEl  = card ? card.querySelector('.note-body')  : null;
-  document.getElementById('nmTitle').value = titleEl ? titleEl.textContent : '';
-  document.getElementById('nmBody').value  = bodyEl  ? bodyEl.textContent  : '';
+// ── NOTES (with localStorage) ──
+var DEFAULT_NOTES = [
+  {title:'CEP Site — KM 42 Observations', body:'Drainage repair at KM 42 progressing. Contractor behind schedule by ~3 days. Need to flag to AGOC in next IPC submission.', tag:'CEP', tagBg:'#3d8eff15', tagColor:'var(--accent-blue)', color:'nc-blue', date:'Today 08:30'},
+  {title:'ESG Outreach — Melbourne Lead', body:'Contact: Sarah Chen at Nexus Capital. Interested in CSRD compliance support. Follow up by Thursday with capability deck.', tag:'ESG', tagBg:'#00e67615', tagColor:'var(--accent-green)', color:'nc-green', date:'Yesterday'},
+  {title:'York Street — JV Notes', body:'Luxury boutique hotel route still highest IRR. Need to shortlist 3 international architects for LEED Platinum positioning.', tag:'REALTY', tagBg:'#ffb30015', tagColor:'var(--accent-amber)', color:'nc-amber', date:'Monday'},
+  {title:'SaaS Product — F&B Module', body:'Core features: recipe costing, menu engineering, supplier integration. Target: mid-market restaurants in Colombo. MVP timeline 3 months.', tag:'SAAS', tagBg:'#c77dff15', tagColor:'var(--accent-purple)', color:'nc-purple', date:'Last week'},
+  {title:'Porsche Macan S — Service Due', body:'Next service at 60,000 km. Book with Euro Motors Colombo. Also check tyre pressure — front-left reading low last check.', tag:'PERSONAL', tagBg:'#ff3d7115', tagColor:'var(--accent-red)', color:'nc-red', date:'Last week'}
+];
+
+var notes = lsGet('cmddash_notes', DEFAULT_NOTES);
+var curNoteIdx = -1;
+
+function saveNotes() { lsSet('cmddash_notes', notes); }
+
+function renderNotes() {
+  var grid = document.getElementById('notesGrid');
+  if (!grid) return;
+  grid.innerHTML = '';
+  notes.forEach(function(note, idx) {
+    var card = document.createElement('div');
+    card.className = 'note-card ' + note.color;
+    card.setAttribute('onclick', 'openNoteIdx(' + idx + ')');
+    card.innerHTML = '<div class="note-title">' + escHtml(note.title) + '</div>' +
+      '<div class="note-body">' + escHtml(note.body) + '</div>' +
+      '<div class="note-footer">' +
+      '<div class="note-date">' + note.date + '</div>' +
+      '<span class="note-tag" style="background:' + note.tagBg + ';color:' + note.tagColor + '">' + note.tag + '</span>' +
+      '</div>';
+    grid.appendChild(card);
+  });
+  var add = document.createElement('div');
+  add.className = 'add-note-card';
+  add.setAttribute('onclick', 'openNoteIdx(-1)');
+  add.innerHTML = '<div style="font-size:24px">+</div><div>New Note</div>';
+  grid.appendChild(add);
+}
+
+function openNoteIdx(idx) {
+  curNoteIdx = idx;
+  var note = idx >= 0 ? notes[idx] : null;
+  document.getElementById('nmTitle').value = note ? note.title : '';
+  document.getElementById('nmBody').value = note ? note.body : '';
   document.getElementById('nmodal').classList.add('open');
   setTimeout(function() { document.getElementById('nmTitle').focus(); }, 150);
 }
+
+// legacy
+function openNote(card) { openNoteIdx(-1); }
+
 function closeNote() {
   document.getElementById('nmodal').classList.remove('open');
 }
+
 function saveNote() {
   var t = document.getElementById('nmTitle').value.trim();
   var b = document.getElementById('nmBody').value.trim();
-  if (!t) return;
-  if (curNote) {
-    var nt = curNote.querySelector('.note-title');
-    var nb = curNote.querySelector('.note-body');
-    var nd = curNote.querySelector('.note-date');
-    if (nt) nt.textContent = t;
-    if (nb) nb.textContent = b;
-    if (nd) nd.textContent = 'Just now';
+  if (!t) { showToast('⚠', 'Please add a title'); return; }
+  var cols = [{c:'nc-blue',bg:'#3d8eff15',color:'var(--accent-blue)',tag:'NOTE'},{c:'nc-green',bg:'#00e67615',color:'var(--accent-green)',tag:'NOTE'},{c:'nc-amber',bg:'#ffb30015',color:'var(--accent-amber)',tag:'NOTE'},{c:'nc-purple',bg:'#c77dff15',color:'var(--accent-purple)',tag:'NOTE'},{c:'nc-red',bg:'#ff3d7115',color:'var(--accent-red)',tag:'NOTE'}];
+  var now = new Date();
+  var dateStr = 'Today ' + (now.getHours() < 10 ? '0' : '') + now.getHours() + ':' + (now.getMinutes() < 10 ? '0' : '') + now.getMinutes();
+  if (curNoteIdx >= 0 && notes[curNoteIdx]) {
+    notes[curNoteIdx].title = t;
+    notes[curNoteIdx].body = b;
+    notes[curNoteIdx].date = dateStr;
   } else {
-    var cols = ['nc-blue','nc-green','nc-amber','nc-purple','nc-red'];
-    var c = cols[Math.floor(Math.random() * cols.length)];
-    var card = document.createElement('div');
-    card.className = 'note-card ' + c;
-    card.setAttribute('onclick', 'openNote(this)');
-    card.innerHTML = '<div class="note-title">' + t + '</div><div class="note-body">' + b + '</div><div class="note-footer"><div class="note-date">Just now</div><span class="note-tag">NOTE</span></div>';
-    var g = document.getElementById('notesGrid');
-    var add = g ? g.querySelector('.add-note-card') : null;
-    if (add) g.insertBefore(card, add); else if (g) g.appendChild(card);
+    var c = cols[notes.length % cols.length];
+    notes.unshift({title:t, body:b, tag:c.tag, tagBg:c.bg, tagColor:c.color, color:c.c, date:dateStr});
   }
+  saveNotes();
+  renderNotes();
   closeNote();
-  showToast('📝', 'Note saved');
+  showToast('📝', curNoteIdx >= 0 ? 'Note updated' : 'Note saved');
 }
 
-// CONNECTIONS
+function deleteNote() {
+  if (curNoteIdx < 0 || !notes[curNoteIdx]) { closeNote(); return; }
+  notes.splice(curNoteIdx, 1);
+  saveNotes();
+  renderNotes();
+  closeNote();
+  showToast('🗑', 'Note deleted');
+}
+
+renderNotes();
+
+// ── HTML ESCAPE ──
+function escHtml(s) {
+  return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+// ── CONNECTIONS ──
 function toggleConn(btn, name) {
   var card = btn.closest('.cconn');
   var connected = card.classList.contains('connected');
@@ -1354,7 +1452,7 @@ function toggleConn(btn, name) {
   }
 }
 
-// POMODORO
+// ── POMODORO ──
 var pRun = false, pSec = 25*60, pTotal = 25*60, pMode = 'focus', pIv = null, pDone = 0;
 var pomCircle = document.getElementById('pomC');
 var CIRC = 596.9;
@@ -1420,7 +1518,7 @@ function addPomLog(mode) {
 }
 updPom();
 
-// DRAG WIDGETS
+// ── DRAG WIDGETS ──
 var dragSrc = null;
 document.querySelectorAll('.ov-card[draggable]').forEach(function(w) {
   var h = document.createElement('div');
